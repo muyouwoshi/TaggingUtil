@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:padding="10dp">
+
+
+    <TextView
+        android:id="@+id/choose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:padding="10dp"
+        android:text="选择"
+        android:textColor="@android:color/holo_blue_light"
+        android:textSize="15dp"/>
+
+    <TextView
+        android:id="@+id/file_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="#30354E"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:text="aaa"
+        />
+
+</RelativeLayout>

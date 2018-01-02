@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Explorer</string>
+    <string name="select_dir">选择目录</string>
+    <string name="select_file">选择文件</string>
+</resources>

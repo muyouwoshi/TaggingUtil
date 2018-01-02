@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.face.tagging.tagging.MainActivity">
+
+    <LinearLayout
+        android:id="@+id/base_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center">
+        <ImageView
+            android:id="@+id/base_image"
+            android:layout_width="480px"
+            android:layout_height="640px" />
+    </LinearLayout>
+
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_toRightOf="@id/base_layout"
+        android:layout_toLeftOf="@+id/tags_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/tags_view"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"/>
+
+</RelativeLayout>
