@@ -5,29 +5,73 @@
     android:layout_height="match_parent"
     tools:context="com.face.tagging.tagging.MainActivity">
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/base_layout"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="center">
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/select_base_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:text="选择底库" />
+
         <ImageView
             android:id="@+id/base_image"
             android:layout_width="480px"
-            android:layout_height="640px" />
-    </LinearLayout>
+            android:layout_height="640px"
+            android:layout_below="@+id/select_base_button" />
+    </RelativeLayout>
 
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_toRightOf="@id/base_layout"
-        android:layout_toLeftOf="@+id/tags_view"
+    <RelativeLayout
+        android:id="@+id/image_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_toLeftOf="@+id/tag_layout"
+        android:layout_toRightOf="@id/base_layout">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/tags_view"
-        android:layout_alignParentRight="true"
+        <Button
+            android:id="@+id/select_image_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="选择图片文件夹" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_below="@+id/select_image_button"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/tag_layout"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true">
+
+        <Button
+            android:id="@+id/tag_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="新建便签" />
+
+        <EditText
+            android:id="@+id/tag_add"
+            android:layout_width="100dp"
+            android:layout_below="@+id/tag_button"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/tags_view"
+            android:layout_below="@+id/tag_add"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+    </RelativeLayout>
 
 </RelativeLayout>

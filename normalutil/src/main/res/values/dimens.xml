@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="seekbarWidth">240dp</dimen>
+    <dimen name="px30_dp">10.0dp</dimen>
+    <dimen name="px15_dp">5.0dp</dimen>
+    <dimen name="px36_sp">12sp</dimen>
+    <dimen name="px386_dp">128.7dp</dimen>
+</resources>

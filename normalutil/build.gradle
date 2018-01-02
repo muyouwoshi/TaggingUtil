@@ -1,15 +1,17 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 27
     buildToolsVersion "27.0.1"
+
     defaultConfig {
-        applicationId "com.face.tagging.tagging"
         minSdkVersion 15
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
     buildTypes {
         release {
@@ -25,14 +27,8 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile "com.android.support:appcompat-v7:${SUPPORT_VERSION}"
-    compile "com.android.support.constraint:constraint-layout:1.0.2"
     testCompile 'junit:junit:4.12'
-    compile "com.android.support:recyclerview-v7:${SUPPORT_VERSION}"
-    compile project(path: ':explorer')
-    compile ("com.github.bumptech.glide:recyclerview-integration:4.4.0") {
-        transitive = false
-    }
-    compile('com.github.bumptech.glide:glide:4.4.0@aar') {
-        transitive = true;
-    }
+    compile 'org.apache.commons:commons-compress:1.15'
+    compile 'io.reactivex.rxjava2:rxjava:2.0.1'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
 }

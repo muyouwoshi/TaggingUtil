@@ -1,1 +1,1 @@
-include ':app', ':explorer'
+include ':app', ':explorer', ':normalutil'
