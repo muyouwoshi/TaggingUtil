@@ -1,0 +1,42 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <style name="task_item_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_margin">5dp</item>
+    </style>
+
+    <!-- ============== 动画 ==================-->
+    <style name="AnimScaleInScaleOutOverShoot" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/scale_in_shot</item>
+        <item name="android:windowExitAnimation">@anim/scale_out</item>
+        <item name="android:interpolator">@anim/left_in</item>
+    </style>
+
+    <!-- 按钮样式 -->
+    <style name="button" />
+    <!-- item中较小的button样式 -->
+    <style name="button_small" parent="button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/btn_fill_theme_bg</item>
+        <item name="android:paddingLeft">@dimen/px30_dp</item>
+        <item name="android:paddingRight">@dimen/px30_dp</item>
+        <item name="android:paddingTop">@dimen/px15_dp</item>
+        <item name="android:paddingBottom">@dimen/px15_dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">@dimen/px36_sp</item>
+    </style>
+
+</resources>
