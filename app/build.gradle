@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 25
     buildToolsVersion "27.0.1"
     defaultConfig {
         applicationId "com.face.tagging.tagging"
         minSdkVersion 15
-        targetSdkVersion 27
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -29,10 +29,11 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile "com.android.support:recyclerview-v7:${SUPPORT_VERSION}"
     compile project(path: ':explorer')
-    compile ("com.github.bumptech.glide:recyclerview-integration:4.4.0") {
-        transitive = false
-    }
-    compile('com.github.bumptech.glide:glide:4.4.0@aar') {
-        transitive = true;
-    }
+//    compile ("com.github.bumptech.glide:recyclerview-integration:4.4.0") {
+//        transitive = false
+//    }
+//    compile('com.github.bumptech.glide:glide:4.4.0@aar') {
+//        transitive = true;
+//    }
+    compile project(path: ':normalutil')
 }

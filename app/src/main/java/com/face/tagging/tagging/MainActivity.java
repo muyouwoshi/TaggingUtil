@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void initView() {
-
+        getSupportFragmentManager().beginTransaction().add(R.id.content,new TagFragment(),"tag").commit();
     }
 
     private void initData() {
@@ -33,6 +33,6 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onStart() {
         super.onStart();
-        getSupportFragmentManager().beginTransaction().add(R.id.content,new TagFragment(),"tag").commit();
+
     }
 }
