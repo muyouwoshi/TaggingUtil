@@ -7,8 +7,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.face.tagging.tagging.Config;
 import com.face.tagging.tagging.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,10 +27,13 @@ public class TagAdapter extends RecyclerView.Adapter<TagAdapter.Holder> {
     }
 
     public void addTag(String s){
-        if(s!=null && !s.startsWith(".") && !s.matches("\\s+")){
+        if(s!=null && !s.startsWith(".") && !s.matches("\\s*")){
             if(!tags.contains(s)){
                 tags.add(s);
                 this.notifyDataSetChanged();
+                String filePath = Config.TAG_DIR+"/"+s;
+                File file = new File(filePath);
+                file.mkdirs();
             }
         }
     }

@@ -62,6 +62,9 @@ public class EncodeUtil {
     public static Bitmap readYUVImage(byte[] data, int width, int height) {
         int frameSize = width * height;
         int[] rgba = new int[frameSize];
+        if(data.length < (width*height*3/2)){
+            return null;
+        }
 
         for (int i = 0; i < height; i++)
             for (int j = 0; j < width; j++) {

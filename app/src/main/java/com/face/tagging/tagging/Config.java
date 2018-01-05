@@ -8,4 +8,6 @@ import android.os.Environment;
 
 public class Config {
     public final static String TAG_DIR = Environment.getExternalStorageDirectory().getAbsolutePath()+"/com.face.tagging";
+    public final static int PREVIEW_WIDTH = 640;
+    public final static int PREVIEW_HEIGHT = 480;
 }
