@@ -2,6 +2,8 @@ package com.face.tagging.tagging.moudle;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,10 +19,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Handler;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import util.face.recognition.EncodeUtil;
 import util.file.FileUtil;
@@ -31,13 +46,17 @@ import util.observe.MsgMgr;
  */
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> implements TagAdapter.OnTagClickListener {
-    private volatile static List<File> files = new ArrayList<>();
+    private volatile static List<File> files = new CopyOnWriteArrayList<>();
     private volatile static File[] oringinFilePaths;
     private volatile static String[] tags;
+    ConcurrentHashMap<Integer, Future> map = new ConcurrentHashMap<>();
+    ExecutorService saveFileService = Executors.newFixedThreadPool(3);
+    private static int layoutWidth;
+
     Context context;
     RecyclerView recyclerView;
     float mScale = 0;
-    int startIndex;
+    int startIndex,focusIndex=1;
     int mCurrentItemOffset;
 
     public ImageAdapter(Context context, RecyclerView recyclerView) {
@@ -49,6 +68,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     void init() {
         oringinFilePaths = new File[0];
         tags = new String[0];
+        layoutWidth = recyclerView.getWidth();
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
@@ -63,12 +83,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     private void onScrolledChangedCallback() {
-        int layoutWidth = recyclerView.getWidth();
-        int index = startIndex;
-        if (startIndex == 0) {
-            index = 1;
-        }
 
+        int index = startIndex;
+//        if (startIndex == 0) {
+//            index = 1;
+//        }
 
         View childView = recyclerView.getLayoutManager().findViewByPosition(index);
         if (childView == null) return;
@@ -78,6 +97,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             mid = Math.abs(lmid - mid);
 
             mScale = 1 - mid * 1.0f / (lmid * 3);
+
             childView.setScaleX(mScale);
             childView.setScaleY(mScale);
 
@@ -90,25 +110,28 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     private void computeCurrentItemPos() {
-        if (mCurrentItemOffset < 240) startIndex = 0;
+        if (mCurrentItemOffset < 240) {
+            startIndex = 0;
+        }
         else {
             startIndex = (mCurrentItemOffset - 240) / 480 + 1;
+            View childView = recyclerView.getLayoutManager().findViewByPosition(startIndex);
+            if(childView !=null) {
+                int childRight = childView.getRight();
+                focusIndex = startIndex + (layoutWidth / 2 - 240 - childRight) / 480 + 1;
+                Log.e("bug11", "computeCurrentItemPos: "+focusIndex);
+            }
         }
     }
 
 
     public void setData(File[] data) {
         int length = data.length;
-//        files = new ArrayList<>(length);
         files.clear();
         files.addAll(Arrays.asList(data));
         tags = new String[length];
         oringinFilePaths = new File[length];
         System.arraycopy(data, 0, oringinFilePaths, 0, length);
-    }
-
-    public void addData(File[] data) {
-//        files.addAll(Arrays.asList(data));
     }
 
     @Override
@@ -124,9 +147,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         View view;
         if (viewType == 1) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            view = inflater.inflate(R.layout.tagging_item, parent, false);
-            ImageView imageView = view.findViewById(R.id.tag_image);
-            view.findViewById(R.id.tag).setVisibility(View.GONE);
+            view = inflater.inflate(R.layout.tagging_blank_half_width_item, parent, false);
+            View imageView = view.findViewById(R.id.blank);
             ViewGroup.LayoutParams params = imageView.getLayoutParams();
             params.width = recyclerView.getWidth() / 2 - 240;
             imageView.setLayoutParams(params);
@@ -141,7 +163,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     @Override
     public void onBindViewHolder(Holder holder, final int position) {
         if (position == 0 || position == files.size() + 1) {
-            holder.tagText.setVisibility(View.GONE);
+//            holder.tagText.setVisibility(View.GONE);
         } else {
             holder.index = position;
             File file = files.get(position - 1);
@@ -160,7 +182,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             holder.imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    unTag(position - 1);
+                    unTag(position);
                 }
             });
         }
@@ -174,7 +196,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             bitmap = EncodeUtil.readRGBImage(file.getAbsolutePath());
         } else if (!file.getName().contains(".DS_Store")) {
             bitmap = EncodeUtil.readYUVImage(file.getPath(), 640, 480);
-            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, 270);
+            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, 90);
         } else {
             bitmap = null;
         }
@@ -192,62 +214,72 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         if (files == null || files.size() == 0) {
             return;
         }
-        tag(startIndex, tag);
+        tag(focusIndex, tag);
     }
 
 
     public void tag(int index, String tag) {
-        moveFile(index, files.get(index), tag);
+        Log.e("bug11", "tag: "+focusIndex);
+        if(tags[index-1] !=null) {
+            unTag(index);
+        }
+        tags[index-1] = tag;
+        refreshItem(index);
+//        resetFile(index-1);
+        copyFile(index -1);
         nextImage();
     }
 
+    private synchronized void copyFile(final int index) {
+        Future future = map.get(index);
+        if(future != null){
+            future.cancel(true);
+        }
+        map.replace(index,saveFileService.submit(new FileCallback(index)));
+    }
+
     public void unTag(final int index) {
-        Observable.create(new ObservableOnSubscribe<Void>() {
-            @Override
-            public void subscribe(ObservableEmitter<Void> e) throws Exception {
-                try {
-                    File file = files.get(index);
-                    String filePath = oringinFilePaths[index].getAbsolutePath();
-                    FileUtil.copyFile(file.getAbsolutePath(), filePath);
-                    refreshItemData(index, filePath, null);
-                    FileUtil.deleteFile(file);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+        tags[index-1] = null;
+        refreshItem(index);
+        copyFile(index-1);
+//        resetFile(index-1);
+    }
+
+    class FileCallback implements Callable<Boolean>{
+        final String tag;
+        final File file;
+        final String newPath;
+        final String originPath;
+        FileCallback(int index){
+            tag = tags[index];
+            file = files.get(index);
+            newPath =Config.TAG_DIR + "/" + tag + "/" + file.getName();
+            originPath = oringinFilePaths[index].getPath();
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+
+            if (tag == null) {
+                File tagFile = new File(newPath);
+                if(tagFile.exists()) {
+                    tagFile.delete();
                 }
+                return true;
+            } else {
+                String oldPath = file.getAbsolutePath();
+                FileUtil.copyFile(oldPath,newPath);
+                return true;
             }
-        }).subscribeOn(Schedulers.io()).subscribe();
+        }
     }
 
-    private void moveFile(final int index, final File file, final String tag) {
-        Observable.create(new ObservableOnSubscribe<Void>() {
-            @Override
-            public void subscribe(ObservableEmitter<Void> e) throws Exception {
-                try {
-                    String filePath = Config.TAG_DIR + "/" + tag + "/" + file.getName();
-                    FileUtil.copyFile(file.getAbsolutePath(), filePath);
-                    refreshItemData(index, filePath, tag);
-                    FileUtil.deleteFile(file);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }).subscribeOn(Schedulers.io()).subscribe();
-    }
-
-    private synchronized void refreshItemData(final int index, String filePath, final String tag) {
-
-        File file = new File(filePath);
-        files.set(index, file);
-        tags[index] = tag;
-        refreshItem(index+1);
-    }
-
-    private void refreshItem(final int index){
+    private void refreshItem(final int index) {
 
         MsgMgr.getInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String tag = tags[index -1];
+                String tag = tags[index - 1];
                 RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(index);
                 if (viewHolder != null && viewHolder instanceof Holder) {
                     Holder holder = (Holder) viewHolder;
@@ -260,12 +292,135 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                         }
                     }
                 }
-
-
             }
         });
+    }
+
+    synchronized void resetFile(int index) {
+//        File file = files.get(index);
+//        String tag = tags[index];
+//        String newPath;
+//        if (tag == null) {
+//            newPath = oringinFilePaths[index].getAbsolutePath();
+//        } else {
+//            newPath = Config.TAG_DIR + "/" + tag + "/" + file.getName();
+//        }
+//        String oldPath = file.getAbsolutePath();
+//
+//        MyTask runTask = map.get(index);
+//
+//
+//        if (runTask != null) {
+//            String rNewpath = runTask.newPath;
+//            String rOldPath = runTask.oldPath;
+//            if (rNewpath == newPath && rOldPath == oldPath) {
+//                return;
+//            } else if(rNewpath == oldPath){
+//                runTask.future.cancel(true);
+//                map.remove(index);
+//                try {
+//                    FileUtil.deleteFile(new File(rNewpath));
+//                }catch (Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+//            else {
+//                if (runTask.future.isDone() && !runTask.future.isCancelled()) {
+//                    runTask.future.cancel(true);
+//                    final MyCallback task = new MyCallback(oldPath, newPath);
+//                    map.remove(index);
+//                    submit(task, index);
+//                }
+//            }
+//        }
+//        else{
+//            final MyCallback task = new MyCallback(oldPath, newPath);
+//            submit(task, index);
+//        }
+    }
+
+    private void submit(final MyCallback task, final int index) {
+//
+//        Observable.create(new ObservableOnSubscribe<Boolean>() {
+//            @Override
+//            public void subscribe(ObservableEmitter<Boolean> e) throws Exception {
+//                final Future<Boolean> tasks = saveFileService.submit(task);
+//                map.putIfAbsent(index,new MyTask(task.oldPath,task.newPath,tasks));
+//                boolean b = tasks.get();
+//                e.onNext(b);
+//                e.onComplete();
+//            }
+//        }).subscribeOn(Schedulers.io()).subscribe(new Observer<Boolean>() {
+//            @Override
+//            public void onSubscribe(Disposable d) {
+//
+//            }
+//
+//            @Override
+//            public void onNext(Boolean value) {
+//                if (value) {
+//                    resetFileSrc(index,task.newPath);
+//                }
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//                e.printStackTrace();
+//            }
+//
+//            @Override
+//            public void onComplete() {
+//
+//            }
+//        });
+    }
+
+    public synchronized void resetFileSrc(int index,String path){
+        FileUtil.deleteFile(files.get(index));
+        files.set(index,new File(path));
+        map.remove(index);
+    }
+
+
+    class MyTask {
+
+        String oldPath;
+        String newPath;
+        Future future;
+
+        public MyTask(final String oldPath, final String newPath,Future future) {
+            this.future = future;
+            this.oldPath = oldPath;
+            this.newPath = newPath;
+        }
 
     }
+
+    class MyCallback implements Callable<Boolean>{
+
+        String oldPath;
+        String newPath;
+        public MyCallback(final String oldPath, final String newPath){
+            this.oldPath = oldPath;
+            this.newPath = newPath;
+        }
+        @Override
+        public Boolean call() throws Exception {
+            boolean hasSave = false;
+            try {
+                File file = new File(oldPath);
+                FileUtil.copyFile(file.getAbsolutePath(), newPath);
+                FileUtil.deleteFile(file);
+                hasSave = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                hasSave = false;
+            } finally {
+                return hasSave;
+            }
+        }
+    }
+
 
     void nextImage() {
         recyclerView.smoothScrollBy(480, 0);
@@ -276,12 +431,17 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         ImageView imageView;
         TextView textView;
         TextView tagText;
+        View view;
 
         public Holder(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.tag_image);
             textView = itemView.findViewById(R.id.tag_name);
             tagText = itemView.findViewById(R.id.tag);
+            if(imageView == null){
+                view = itemView.findViewById(R.id.blank);
+            }
+
         }
     }
 }
