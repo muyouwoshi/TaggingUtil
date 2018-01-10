@@ -27,8 +27,13 @@ import com.megvii.csp.explorer.FileSelectListener;
 import java.io.File;
 import java.io.FilenameFilter;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.schedulers.Schedulers;
 import popup.LoadingDialog;
 import util.face.recognition.EncodeUtil;
+import util.file.FileUtil;
 
 /**
  * Created by zhoujie on 2017/12/29.
@@ -46,8 +51,9 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
     TagAdapter tagAdapter;
     ImageAdapter imageAdapter;
 
-    int baseId,baseAngle;
-    String baseName;
+//    int baseId,baseAngle;
+    SettingDialog.BaseSetBean baseSetBean;
+//    String baseName;
     TextView baseNameTv;
 
     String basePath, imagesPath;
@@ -62,10 +68,17 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
     }
 
     private void initData() {
+        baseSetBean = new SettingDialog.BaseSetBean();
         SharedPreferences sp = getActivity().getSharedPreferences(Config.SP_SETTING, 0);
-        baseId = sp.getInt(Config.SP_BASE_SETTING, Config.BASE_SIMPLE);
-        baseName = sp.getString(Config.SP_BASE_NAME, null);
-        baseAngle = sp.getInt(Config.SP_BASE_ANGLE,Config.BASE_ANGLE_270);
+//        baseId = sp.getInt(Config.SP_BASE_SETTING, Config.BASE_SIMPLE);
+//        baseName = sp.getString(Config.SP_BASE_NAME, null);
+//        baseAngle = sp.getInt(Config.SP_BASE_ANGLE,Config.BASE_ANGLE_270);
+        baseSetBean.baseSet = sp.getInt(Config.SP_BASE_SETTING, Config.BASE_SIMPLE);
+        baseSetBean.baseName = sp.getString(Config.SP_BASE_NAME, null);
+        baseSetBean.baseAngle = sp.getInt(Config.SP_BASE_ANGLE,Config.BASE_ANGLE_270);
+        baseSetBean.saveAllInOne = sp.getBoolean(Config.SAVE_ALL_IN_ONE,false);
+        baseSetBean.saveDirName = sp.getString(Config.SP_SAVE_BASE_NAME,"base");
+        baseSetBean.saveWithTag = sp.getBoolean(Config.SAVE_WITH_TAG,false);
     }
 
     private void initView(View view) {
@@ -93,7 +106,7 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
         view.findViewById(R.id.angle).setOnClickListener(this);
         view.findViewById(R.id.setting).setOnClickListener(this);
 
-        if(baseId == Config.BASE_SAME_AS_IMAGE)  baseSelectedBt.setVisibility(View.INVISIBLE);
+        if(baseSetBean.baseSet == Config.BASE_SAME_AS_IMAGE)  baseSelectedBt.setVisibility(View.INVISIBLE);
     }
 
 
@@ -124,12 +137,10 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
         SettingDialog dialog = new SettingDialog();
         dialog.setDismissListener(new SettingDialog.DialogDismissListener() {
             @Override
-            public void onDismiss(int baseId, String baseName, int baseAngle) {
-                ReTagFragment.this.baseAngle = baseAngle;
-                ReTagFragment.this.baseId = baseId;
-                switch (baseId) {
+            public void onDismiss(SettingDialog.BaseSetBean baseSet) {
+                baseSetBean = baseSet;
+                switch (baseSetBean.baseSet) {
                     case Config.BASE_SAME_AS_IMAGE:
-                        ReTagFragment.this.baseName = baseName;
                         showBase(imagesPath);
                         baseSelectedBt.setVisibility(View.INVISIBLE);
                         break;
@@ -155,7 +166,7 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
             @Override
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
-                if(baseId == Config.BASE_SAME_AS_IMAGE && file.getName().equals(baseName)){
+                if(baseSetBean.baseSet == Config.BASE_SAME_AS_IMAGE && file.getName().equals(baseSetBean.baseName)){
                     return false;
                 }
                 if (file.exists()) {
@@ -175,7 +186,7 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
         this.imagesPath = filePath;
         showBase(basePath);
         addImage(imagesFile);
-        if (baseId == Config.BASE_SAME_AS_IMAGE) showBase(imagesPath);
+        if (baseSetBean.baseSet == Config.BASE_SAME_AS_IMAGE) showBase(imagesPath);
     }
 
     private void addImage(File[] imagesPath) {
@@ -186,12 +197,12 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
     }
 
     private void showBase(String filePath) {
-        if (baseId == Config.BASE_SIMPLE) {
+        if (baseSetBean.baseSet == Config.BASE_SIMPLE) {
             refreshBase(filePath);
-        } else if (baseId == Config.BASE_ALL) {
+        } else if (baseSetBean.baseSet == Config.BASE_ALL) {
             refreshBase(filePath, imagesPath);
-        } else if (baseId == Config.BASE_SAME_AS_IMAGE) {
-            refreshBaseFromImage(filePath, baseName);
+        } else if (baseSetBean.baseSet == Config.BASE_SAME_AS_IMAGE) {
+            refreshBaseFromImage(filePath, baseSetBean.baseName);
         }
     }
 
@@ -238,20 +249,33 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
             bitmap = EncodeUtil.readRGBImage(file.getAbsolutePath());
         } else if (!file.getName().contains(".DS_Store")) {
             bitmap = EncodeUtil.readYUVImage(file.getPath(), 640, 480);
-            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, baseAngle*90);
+            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, baseSetBean.baseAngle*90);
         } else {
             bitmap = null;
         }
 
         baseIamge.setImageBitmap(bitmap);
         baseNameTv.setText(fileName);
+        if(baseSetBean.saveAllInOne){
+            String dstPath = Config.BASE_DIR + "/" + baseSetBean.saveDirName+"/"+fileName;
+            saveBase(file.getAbsolutePath(),dstPath);
+        }
+    }
+
+    private void saveBase(final String src,final String des){
+        Observable.create(new ObservableOnSubscribe<Void>() {
+            @Override
+            public void subscribe(ObservableEmitter<Void> e) throws Exception {
+                FileUtil.copyFile(src,des);
+            }
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
 
     private void showAdd() {
         if (tagText.getVisibility() == View.VISIBLE) {
             tagText.setVisibility(View.GONE);
-            tagAdapter.addTag(tagText.getText().toString());
+            tagAdapter.addTag(tagText.getText().toString(),hasTagPath());
             button.setText("新建标签");
 
         } else {
@@ -262,9 +286,16 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
         }
     }
 
+    private String hasTagPath() {
+//        if(baseSetBean.saveWithTag){
+//
+//        }
+        return null;
+    }
+
     private void selectFile(MyFileSelectListener listener) {
         boolean onlyDir = true;
-        if(listener.mode == SELECT_BASE && baseId == Config.BASE_SIMPLE) {
+        if(listener.mode == SELECT_BASE && baseSetBean.baseSet == Config.BASE_SIMPLE) {
             onlyDir = false;
         }
         FileExplorer.pickFile(getActivity(), onlyDir, listener);

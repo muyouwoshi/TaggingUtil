@@ -28,6 +28,8 @@ public class SftpUtil {
     JSch jsch;
     Session sshSession = null;
 
+    ChannelSftp defaultChannel;
+
     public SftpUtil(String user, String host, String sshKeyPath) {
         this.user = user;
         this.host = host;
@@ -81,21 +83,27 @@ public class SftpUtil {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (channel != null) {
-                channel.quit();
-                channel.disconnect();
-            }
+//            if (channel != null) {
+//                channel.quit();
+//            }
         }
         return v;
     }
 
     private ChannelSftp getChannle() throws Exception {
-        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
-        channel.connect(channelTimeout); // 建立SFTP通道的连接
-        if (channel.isConnected()) {
-            return channel;
+
+        if (defaultChannel == null || defaultChannel.isClosed() || !defaultChannel.isConnected()) {
+            if (defaultChannel != null) defaultChannel.quit();
+            if (isConnect()) {
+
+            } else {
+                connect();
+            }
+            defaultChannel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
+            defaultChannel.connect(channelTimeout); // 建立SFTP通道的连接
         }
-        return null;
+
+        return defaultChannel;
     }
 
     /**
@@ -111,7 +119,7 @@ public class SftpUtil {
         channel.cd(hostPath);
         File file = new File(localPath, fileName);
         channel.get(fileName, new FileOutputStream(file));
-        channel.disconnect();
+//        channel.quit();
     }
 
     /**
@@ -128,7 +136,7 @@ public class SftpUtil {
             channel.cd(directory);
             File file = new File(uploadFile);
             channel.put(new FileInputStream(file), file.getName());
-            channel.disconnect();
+//            channel.quit();
         }
     }
 
@@ -141,13 +149,14 @@ public class SftpUtil {
     public synchronized void upload(String directory, String uploadFile, SftpProgressMonitor monitor, int mode) throws Exception {
 //        channel.cd(directory);
 //        mkdir(directory);
-        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
-        channel.connect(channelTimeout); // 建立SFTP通道的连接
-        if (channel.isConnected()) {
+//        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
+        ChannelSftp channel = getChannle();
+//        channel.connect(channelTimeout); // 建立SFTP通道的连接
+//        if (channel.isConnected()) {
             channel.cd(directory);
             channel.put(uploadFile, directory, monitor, mode);
-            channel.quit();
-        }
+//            channel.quit();
+//        }
     }
 
 
@@ -155,10 +164,10 @@ public class SftpUtil {
         ChannelSftp channel = getChannle();
         try {
             mkdir(directory, channel);
-        }catch (Exception e){
-            channel.disconnect();
+        } catch (Exception e) {
+//            channel.quit();
         }
-        channel.disconnect();
+//        channel.quit();
     }
 
     private synchronized void mkdir(String directory, ChannelSftp channel) throws Exception {
@@ -194,26 +203,27 @@ public class SftpUtil {
     public boolean isConnect() {
         if (sshSession == null) {
             return false;
+        } else if (sshSession.isConnected()) {
+            return true;
         }
 
-        return sshSession.isConnected();
+        return false;
     }
 
-    public boolean createDir(String createPath)throws Exception{
+    public boolean createDir(String createPath) throws Exception {
 
         ChannelSftp sftp = null;
-        try{
-            sftp =getChannle();
-            createDir(createPath,getChannle());
+        try {
+            sftp = getChannle();
+            createDir(createPath, getChannle());
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }finally {
-            if(sftp != null){
-                sftp.quit();
-                sftp.disconnect();
-            }
+        } finally {
+//            if (sftp != null) {
+//                sftp.quit();
+//            }
         }
     }
 
@@ -264,8 +274,9 @@ public class SftpUtil {
 
 
     public boolean isDirExist(String path) throws Exception {
-        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
-        channel.connect(channelTimeout); // 建立SFTP通道的连接
+//        ChannelSftp channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
+//        channel.connect(channelTimeout); // 建立SFTP通道的连接
+        ChannelSftp channel = getChannle();
         if (channel.isConnected()) {
             return isDirExist(path, channel);
         } else {
@@ -273,13 +284,14 @@ public class SftpUtil {
         }
     }
 
-    public String checkPath(String root, String path) throws Exception{
+    public String checkPath(String root, String path) throws Exception {
         if (!path.startsWith(root)) return null;
         ChannelSftp channel = null;
         try {
-            channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
-            channel.connect(channelTimeout); // 建立SFTP通道的连接
-            if (channel.isConnected()){
+//            channel = (ChannelSftp) sshSession.openChannel("sftp"); // 打开SFTP通道
+//            channel.connect(channelTimeout); // 建立SFTP通道的连接
+            channel = getChannle();
+            if (channel.isConnected()) {
                 if (isDirExist(root, channel)) {
                     String subPath = path.replace(root, "");
                     String pathArry[] = subPath.split("/");
@@ -297,19 +309,19 @@ public class SftpUtil {
                         }
                     }
                     return filePath.toString();
-                }else{
+                } else {
                     return null;
                 }
-            } else{
+            } else {
                 throw new Exception("connect failed");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;
         } finally {
-            if (channel != null) {
-                channel.disconnect();
-            }
+//            if (channel != null) {
+//                channel.quit();
+//            }
         }
     }
 }

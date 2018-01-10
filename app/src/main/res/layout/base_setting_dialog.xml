@@ -96,4 +96,41 @@
 
     </RadioGroup>
 
+    <LinearLayout
+
+        android:layout_margin="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="50dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="底库保存"/>
+
+        <CheckBox
+            android:id="@+id/save_with_tag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:layout_gravity="center_vertical"
+            android:visibility="gone"
+            android:text="与标签同目录"/>
+
+        <CheckBox
+            android:id="@+id/all_save_in_one"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="保存在统一文件夹"/>
+
+        <EditText
+            android:id="@+id/base_dir_name_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="50dp"
+            android:layout_gravity="center_vertical"
+            android:text="base"/>
+    </LinearLayout>
+
 </LinearLayout>

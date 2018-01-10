@@ -16,6 +16,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
@@ -28,12 +30,16 @@ import static android.content.Context.MODE_PRIVATE;
  * Created by zhoujie on 2018/1/8.
  */
 
-public class SettingDialog extends DialogFragment implements RadioGroup.OnCheckedChangeListener, View.OnClickListener {
-    EditText baseName;
+public class SettingDialog extends DialogFragment implements RadioGroup.OnCheckedChangeListener, View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+    EditText baseName,baseSaveDirET;
     int baseSet = Config.BASE_SIMPLE;
     DialogDismissListener mListener;
     int baseAngle = Config.BASE_ANGLE_270;
     RadioGroup angleGroup;
+
+    CheckBox baseSaveOneCB,baseSaveTagCB;
+    boolean saveWithTag,saveAllInOne;
+    String baseSaveDir = "base";
 
     @Nullable
     @Override
@@ -112,6 +118,51 @@ public class SettingDialog extends DialogFragment implements RadioGroup.OnChecke
         angleGroup.setOnCheckedChangeListener(this);
         baseAngle = getSharedPreferences().getInt(Config.SP_BASE_ANGLE, Config.BASE_ANGLE_270);
         setAngle();
+
+        baseSaveDirET = view.findViewById(R.id.base_dir_name_tv);
+        baseSaveOneCB = view.findViewById(R.id.all_save_in_one);
+        baseSaveTagCB = view.findViewById(R.id.save_with_tag);
+
+        SharedPreferences sp = Config.getSetting(getContext());
+        saveAllInOne = sp.getBoolean(Config.SAVE_ALL_IN_ONE,false);
+        saveWithTag = sp.getBoolean(Config.SAVE_WITH_TAG,false);
+        baseSaveDir = sp.getString(Config.SP_SAVE_BASE_NAME,"base");
+        setSaveAllInOne();
+        setSaveWithTag();
+
+        baseSaveDirET.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                baseSaveDir = s.toString();
+            }
+        });
+
+        baseSaveOneCB.setOnCheckedChangeListener(this);
+        baseSaveTagCB.setOnCheckedChangeListener(this);
+    }
+
+    private void setSaveAllInOne() {
+        if(saveAllInOne){
+            baseSaveOneCB.setChecked(true);
+            baseSaveDirET.setVisibility(View.VISIBLE);
+        }else {
+            baseSaveOneCB.setChecked(false);
+            baseSaveDirET.setVisibility(View.GONE);
+        }
+    }
+
+    private void setSaveWithTag(){
+        baseSaveTagCB.setChecked(saveWithTag);
     }
 
     private void setAngle() {
@@ -146,9 +197,29 @@ public class SettingDialog extends DialogFragment implements RadioGroup.OnChecke
 
     @Override
     public void onDismiss(DialogInterface dialog) {
+        getSharedPreferences().edit().putString(Config.SP_SAVE_BASE_NAME,baseSaveDir)
+                .putBoolean(Config.SAVE_WITH_TAG,saveWithTag)
+                .putBoolean(Config.SAVE_ALL_IN_ONE,saveAllInOne).apply();
+
+        BaseSetBean baseSetBean = new BaseSetBean();
+        baseSetBean.baseSet = baseSet;
+        baseSetBean.baseName = baseName.getText().toString();
+        baseSetBean.baseAngle = baseAngle;
+        baseSetBean.saveAllInOne = saveAllInOne;
+        baseSetBean.saveWithTag = saveWithTag;
+        baseSetBean.saveDirName = baseSaveDir;
         if (mListener != null)
-            mListener.onDismiss(baseSet, baseName.getText().toString(), baseAngle);
+            mListener.onDismiss(baseSetBean);
         super.onDismiss(dialog);
+    }
+
+    public static class  BaseSetBean{
+        public int baseSet;
+        public String baseName;
+        public int baseAngle;
+        public boolean saveAllInOne;
+        public boolean saveWithTag;
+        public String saveDirName;
     }
 
     @Override
@@ -199,7 +270,21 @@ public class SettingDialog extends DialogFragment implements RadioGroup.OnChecke
         return getActivity().getSharedPreferences(Config.SP_SETTING, MODE_PRIVATE);
     }
 
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (buttonView.getId()){
+            case R.id.all_save_in_one:
+                    saveAllInOne = isChecked;
+                    if(saveAllInOne) baseSaveDirET.setVisibility(View.VISIBLE);
+                    else baseSaveDirET.setVisibility(View.GONE);
+                break;
+            case R.id.save_with_tag:
+                    saveWithTag = isChecked;
+                break;
+        }
+    }
+
     interface DialogDismissListener {
-        void onDismiss(int baseId, String baseName, int baseAngle);
+        void onDismiss(BaseSetBean baseSet);
     }
 }

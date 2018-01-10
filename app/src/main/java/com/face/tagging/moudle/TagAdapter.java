@@ -31,6 +31,18 @@ public class TagAdapter extends RecyclerView.Adapter<TagAdapter.Holder> {
         this.manager = manager;
     }
 
+    public void addTag(String s,String basePath){
+        if(s!=null && !s.startsWith(".") && !s.matches("\\s*")){
+            if(!tags.contains(s)){
+                tags.add(s);
+                this.notifyDataSetChanged();
+                String filePath = Config.TAG_DIR+"/"+s;
+                File file = new File(filePath);
+                file.mkdirs();
+            }
+        }
+    }
+
     public void addTag(String s){
         if(s!=null && !s.startsWith(".") && !s.matches("\\s*")){
             if(!tags.contains(s)){

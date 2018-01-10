@@ -158,7 +158,7 @@ public class UploadMgr {
                                 callback.uploadComplite();
                                 super.end();
                             }
-                        }, ChannelSftp.APPEND);
+                        }, ChannelSftp.OVERWRITE);
                         if(deleteFile) {
                             FileUtil.deletePath(filePath);
                         }
