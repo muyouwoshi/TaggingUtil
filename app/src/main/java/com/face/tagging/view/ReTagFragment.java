@@ -110,7 +110,7 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
                 showAdd();
                 break;
             case R.id.angle:
-                imageAdapter.nextAngle();
+                if(imageAdapter!=null)imageAdapter.nextAngle();
                 break;
             case R.id.setting:
                 showSetting();

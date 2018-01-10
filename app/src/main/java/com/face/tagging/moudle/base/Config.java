@@ -44,7 +44,7 @@ public class Config {
     public static String SSH_KEY_Path = Environment.getExternalStorageDirectory().getAbsolutePath()+"/sshkey/brainpp_id_rsa";
     public final static String SFTP_HOST = "bj-a-internal.brainpp.ml";
     public final static String SFTP_USER = "ws.zhoujie.brw";
-    public static String REMOTE_ROOT = "/unsullied/sharefs/zhoujie/face_unlock/test";//todo 改路径
+    public static String REMOTE_ROOT = "/unsullied/sharefs/zhoujie/face_unlock";
     public static String SP_REMOTE_DIR = "remote_dir";
 
     public static SharedPreferences getSetting(Context context){

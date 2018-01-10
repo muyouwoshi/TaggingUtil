@@ -82,6 +82,7 @@ public class SftpUtil {
             e.printStackTrace();
         } finally {
             if (channel != null) {
+                channel.quit();
                 channel.disconnect();
             }
         }
@@ -191,8 +192,29 @@ public class SftpUtil {
     }
 
     public boolean isConnect() {
-        if (sshSession == null) return false;
+        if (sshSession == null) {
+            return false;
+        }
+
         return sshSession.isConnected();
+    }
+
+    public boolean createDir(String createPath)throws Exception{
+
+        ChannelSftp sftp = null;
+        try{
+            sftp =getChannle();
+            createDir(createPath,getChannle());
+            return true;
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
+        }finally {
+            if(sftp != null){
+                sftp.quit();
+                sftp.disconnect();
+            }
+        }
     }
 
     /**
@@ -204,6 +226,7 @@ public class SftpUtil {
     public void createDir(String createpath, ChannelSftp sftp) throws Exception {
         if (isDirExist(createpath, sftp)) {
             sftp.cd(createpath);
+            return;
         }
         String pathArry[] = createpath.split("/");
         StringBuffer filePath = new StringBuffer("/");
@@ -266,7 +289,7 @@ public class SftpUtil {
                             continue;
                         }
                         String exist = filePath.toString();
-                        filePath.append(path + "/");
+                        filePath.append(path1 + "/");
                         if (isDirExist(filePath.toString(), channel)) {
                             continue;
                         } else {
