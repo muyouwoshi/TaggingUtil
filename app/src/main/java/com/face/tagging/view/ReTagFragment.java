@@ -166,9 +166,10 @@ public class ReTagFragment extends Fragment implements View.OnClickListener,TagA
             @Override
             public boolean accept(File dir, String name) {
                 File file = new File(dir, name);
-                if(baseSetBean.baseSet == Config.BASE_SAME_AS_IMAGE && file.getName().equals(baseSetBean.baseName)){
-                    return false;
-                }
+                //todo 底库保存冲突（底库放在统一文件夹，直接上传，不用再次复制）
+//                if(baseSetBean.baseSet == Config.BASE_SAME_AS_IMAGE && file.getName().equals(baseSetBean.baseName)){
+//                    return false;
+//                }
                 if (file.exists()) {
                     if (file.isDirectory()) {
                         return false;
