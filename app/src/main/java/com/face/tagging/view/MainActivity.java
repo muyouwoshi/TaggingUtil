@@ -1,4 +1,4 @@
-package com.face.tagging.tagging;
+package com.face.tagging.view;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -7,6 +7,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
+
+import com.face.tagging.tagging.R;
 
 public class MainActivity extends AppCompatActivity{
     @Override

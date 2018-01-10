@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.face.tagging.tagging.MainActivity">
+    tools:context="com.face.tagging.tagging.com.face.tagging.view.MainActivity">
 
     <RelativeLayout
         android:id="@+id/base_layout"

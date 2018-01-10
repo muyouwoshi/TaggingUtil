@@ -1,4 +1,4 @@
-package com.face.tagging.tagging;
+package com.face.tagging.view;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,7 +15,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.face.tagging.tagging.moudle.TagAdapter;
+import com.face.tagging.moudle.TagAdapter;
+import com.face.tagging.moudle.base.Config;
+import com.face.tagging.tagging.R;
 import com.megvii.csp.explorer.FileExplorer;
 import com.megvii.csp.explorer.FileSelectListener;
 
@@ -71,7 +73,7 @@ public class TagFragment extends Fragment implements View.OnClickListener, TagAd
         tagImage = (ImageView) view.findViewById(R.id.tag_image);
         imageName = (TextView) view.findViewById(R.id.image_name);
 
-        tagAdapter = new TagAdapter(getContext());
+        tagAdapter = new TagAdapter(getContext(),getChildFragmentManager());
         tagAdapter.setClickListener(this);
         tagView.setLayoutManager(new LinearLayoutManager(this.getContext(), LinearLayoutManager.VERTICAL, false));
         tagView.setAdapter(tagAdapter);
@@ -192,7 +194,7 @@ public class TagFragment extends Fragment implements View.OnClickListener, TagAd
             @Override
             public void subscribe(ObservableEmitter<Void> e) throws Exception {
                 try{
-                    FileUtil.copyFile(file.getAbsolutePath(),Config.TAG_DIR+"/"+tag+"/"+file.getName());
+                    FileUtil.copyFile(file.getAbsolutePath(), Config.TAG_DIR+"/"+tag+"/"+file.getName());
                     FileUtil.deleteFile(file);
                 }catch (Exception ex){
                     ex.printStackTrace();

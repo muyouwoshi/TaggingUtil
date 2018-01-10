@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:layout_alignParentRight="true"
+            android:id="@+id/close"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="15dp"
+            android:src="@drawable/close"/>
+
+    </RelativeLayout>
+
+
+    <LinearLayout
+        android:padding="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/common_retangle_normal">
+        <RadioGroup
+            android:id="@+id/base_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/base_manual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="手动选择"/>
+
+            <RadioButton
+                android:id="@+id/same_as_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="与图片同一文件夹"/>
+
+            <RadioButton
+                android:id="@+id/all_base"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="所有底库同一文件夹"/>
+
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/base_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="输入底库名称"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+
+    <RadioGroup
+        android:layout_margin="10dp"
+        android:id="@+id/base_angle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <RadioButton
+            android:id="@+id/angle_0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="旋转0度"/>
+
+        <RadioButton
+            android:id="@+id/angle_90"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="旋转90度"/>
+        <RadioButton
+            android:id="@+id/angle_180"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="旋转180度"/>
+        <RadioButton
+            android:id="@+id/angle_270"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="旋转270度"/>
+
+    </RadioGroup>
+
+</LinearLayout>

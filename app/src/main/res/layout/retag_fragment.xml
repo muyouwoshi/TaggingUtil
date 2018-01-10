@@ -4,19 +4,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
-    tools:context="com.face.tagging.tagging.MainActivity">
+    tools:context="com.face.tagging.tagging.com.face.tagging.view.MainActivity">
 
     <RelativeLayout
         android:layout_margin="5dp"
         android:id="@+id/base_layout"
-        android:layout_width="wrap_content"
+        android:layout_width="480px"
         android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/setting"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/setting"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"/>
 
         <Button
             android:id="@+id/select_base_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:background="@drawable/common_round_normal"
             android:text="选择底库" />
@@ -49,6 +57,14 @@
         android:layout_height="match_parent"
         android:layout_toLeftOf="@+id/line2"
         android:layout_toRightOf="@id/line1">
+
+        <ImageView
+            android:id="@+id/angle"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/angle"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"/>
 
         <Button
             android:id="@+id/select_image_button"

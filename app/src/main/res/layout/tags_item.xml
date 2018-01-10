@@ -6,7 +6,7 @@
     <TextView
         android:id="@+id/tag_item"
         android:layout_margin="3dp"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/common_round_normal"/>

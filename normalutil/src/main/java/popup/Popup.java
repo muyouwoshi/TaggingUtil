@@ -35,10 +35,6 @@ public class Popup extends DialogFragment {
      */
     private DialogInterface.OnDismissListener dismissListener;
 
-    public Popup(){
-        super();
-    }
-
     /**
      * Instantiates a new Popup.
      *
@@ -46,7 +42,6 @@ public class Popup extends DialogFragment {
      */
     @SuppressLint("ValidFragment")
     public Popup(Context context) {
-        super();
         init(context);
     }
 

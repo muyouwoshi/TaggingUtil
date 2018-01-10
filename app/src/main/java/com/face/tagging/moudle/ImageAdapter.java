@@ -1,42 +1,27 @@
-package com.face.tagging.tagging.moudle;
+package com.face.tagging.moudle;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.face.tagging.tagging.Config;
+import com.face.tagging.moudle.base.Config;
 import com.face.tagging.tagging.R;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.logging.Handler;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import util.face.recognition.EncodeUtil;
 import util.file.FileUtil;
 import util.observe.MsgMgr;
@@ -46,17 +31,18 @@ import util.observe.MsgMgr;
  */
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> implements TagAdapter.OnTagClickListener {
-    private volatile static List<File> files = new CopyOnWriteArrayList<>();
-    private volatile static File[] oringinFilePaths;
-    private volatile static String[] tags;
+    private volatile List<File> files = new CopyOnWriteArrayList<>();
+    private volatile File[] oringinFilePaths;
+    private volatile String[] tags;
     ConcurrentHashMap<Integer, Future> map = new ConcurrentHashMap<>();
     ExecutorService saveFileService = Executors.newFixedThreadPool(3);
     private static int layoutWidth;
+    private int angle = 270;
 
     Context context;
     RecyclerView recyclerView;
     float mScale = 0;
-    int startIndex,focusIndex=1;
+    private int startIndex, focusIndex = 1;
     int mCurrentItemOffset;
 
     public ImageAdapter(Context context, RecyclerView recyclerView) {
@@ -66,6 +52,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     void init() {
+        focusIndex = 1;
         oringinFilePaths = new File[0];
         tags = new String[0];
         layoutWidth = recyclerView.getWidth();
@@ -112,15 +99,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     private void computeCurrentItemPos() {
         if (mCurrentItemOffset < 240) {
             startIndex = 0;
-        }
-        else {
+        } else {
             startIndex = (mCurrentItemOffset - 240) / 480 + 1;
-            View childView = recyclerView.getLayoutManager().findViewByPosition(startIndex);
-            if(childView !=null) {
-                int childRight = childView.getRight();
-                focusIndex = startIndex + (layoutWidth / 2 - 240 - childRight) / 480 + 1;
-                Log.e("bug11", "computeCurrentItemPos: "+focusIndex);
-            }
+
+        }
+        View childView = recyclerView.getLayoutManager().findViewByPosition(startIndex);
+        if (childView != null) {
+            int childRight = childView.getRight();
+            focusIndex = startIndex + (layoutWidth / 2 - 240 - childRight) / 480 + 1;
         }
     }
 
@@ -132,6 +118,12 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         tags = new String[length];
         oringinFilePaths = new File[length];
         System.arraycopy(data, 0, oringinFilePaths, 0, length);
+    }
+
+    public void nextAngle(){
+        angle += 90;
+        if(angle == 360) angle = 0;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -196,7 +188,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             bitmap = EncodeUtil.readRGBImage(file.getAbsolutePath());
         } else if (!file.getName().contains(".DS_Store")) {
             bitmap = EncodeUtil.readYUVImage(file.getPath(), 640, 480);
-            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, 90);
+            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, angle);
         } else {
             bitmap = null;
         }
@@ -219,41 +211,67 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
 
     public void tag(int index, String tag) {
-        Log.e("bug11", "tag: "+focusIndex);
-        if(tags[index-1] !=null) {
-            unTag(index);
+        String oldTag = tags[index - 1];
+        if (oldTag == tag) {
+            nextImage();
+            return;
         }
-        tags[index-1] = tag;
+        tags[index - 1] = tag;
         refreshItem(index);
 //        resetFile(index-1);
-        copyFile(index -1);
+        copyFile(index - 1, oldTag);
         nextImage();
     }
 
-    private synchronized void copyFile(final int index) {
+    private synchronized void copyFile(final int index, final String oldTag) {
         Future future = map.get(index);
-        if(future != null){
+        if (future != null) {
             future.cancel(true);
+            if (future.isCancelled()) {
+                if (oldTag != null) {
+                    String path = Config.TAG_DIR + "/" + oldTag + "/" + files.get(index).getName();
+                    deleteTagFile(path);
+                }
+            } else if (oldTag != null) {
+                MsgMgr.getInstance().delay(new Runnable() {
+                    @Override
+                    public void run() {
+                        String path = Config.TAG_DIR + "/" + oldTag + "/" + files.get(index).getName();
+                        deleteTagFile(path);
+                    }
+                }, 1000);
+            }
         }
-        map.replace(index,saveFileService.submit(new FileCallback(index)));
+        if (oldTag != null) {
+            String path = Config.TAG_DIR + "/" + oldTag + "/" + files.get(index).getName();
+            deleteTagFile(path);
+        }
+        map.replace(index, saveFileService.submit(new FileCallback(index)));
+    }
+
+    private void deleteTagFile(String path) {
+        File file = new File(path);
+        if (file.exists()) file.delete();
     }
 
     public void unTag(final int index) {
-        tags[index-1] = null;
+        String oldTag = tags[index -1];
+        tags[index - 1] = null;
         refreshItem(index);
-        copyFile(index-1);
+        copyFile(index - 1, oldTag);
 //        resetFile(index-1);
     }
 
-    class FileCallback implements Callable<Boolean>{
+    class FileCallback implements Callable<Boolean> {
         final String tag;
         final File file;
         final String newPath;
         final String originPath;
-        FileCallback(int index){
+
+        FileCallback(int index) {
             tag = tags[index];
             file = files.get(index);
-            newPath =Config.TAG_DIR + "/" + tag + "/" + file.getName();
+            newPath = Config.TAG_DIR + "/" + tag + "/" + file.getName();
             originPath = oringinFilePaths[index].getPath();
         }
 
@@ -262,13 +280,13 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
             if (tag == null) {
                 File tagFile = new File(newPath);
-                if(tagFile.exists()) {
+                if (tagFile.exists()) {
                     tagFile.delete();
                 }
                 return true;
             } else {
                 String oldPath = file.getAbsolutePath();
-                FileUtil.copyFile(oldPath,newPath);
+                FileUtil.copyFile(oldPath, newPath);
                 return true;
             }
         }
@@ -375,9 +393,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 //        });
     }
 
-    public synchronized void resetFileSrc(int index,String path){
+    public synchronized void resetFileSrc(int index, String path) {
         FileUtil.deleteFile(files.get(index));
-        files.set(index,new File(path));
+        files.set(index, new File(path));
         map.remove(index);
     }
 
@@ -388,7 +406,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         String newPath;
         Future future;
 
-        public MyTask(final String oldPath, final String newPath,Future future) {
+        public MyTask(final String oldPath, final String newPath, Future future) {
             this.future = future;
             this.oldPath = oldPath;
             this.newPath = newPath;
@@ -396,14 +414,16 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     }
 
-    class MyCallback implements Callable<Boolean>{
+    class MyCallback implements Callable<Boolean> {
 
         String oldPath;
         String newPath;
-        public MyCallback(final String oldPath, final String newPath){
+
+        public MyCallback(final String oldPath, final String newPath) {
             this.oldPath = oldPath;
             this.newPath = newPath;
         }
+
         @Override
         public Boolean call() throws Exception {
             boolean hasSave = false;
@@ -438,7 +458,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             imageView = itemView.findViewById(R.id.tag_image);
             textView = itemView.findViewById(R.id.tag_name);
             tagText = itemView.findViewById(R.id.tag);
-            if(imageView == null){
+            if (imageView == null) {
                 view = itemView.findViewById(R.id.blank);
             }
 
