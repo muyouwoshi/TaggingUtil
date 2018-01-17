@@ -26,4 +26,6 @@ task clean(type: Delete) {
 
 ext{
     SDK_VERSION = 27
+    keyStoreFile = file('/Users/zhoujie/my_home/Android/keystore/tagging/tagging')
+    outPutFilePath = '/Users/zhoujie/my_home/Android/keystore/tagging'
 }

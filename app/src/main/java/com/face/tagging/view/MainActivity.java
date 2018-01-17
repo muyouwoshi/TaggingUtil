@@ -9,6 +9,7 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import com.face.tagging.tagging.R;
+import com.face.tagging.view.fragment.ReTagFragment;
 
 public class MainActivity extends AppCompatActivity{
     @Override
@@ -32,12 +33,6 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void initData() {
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
     }
 }

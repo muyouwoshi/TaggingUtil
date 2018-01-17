@@ -5,10 +5,25 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:layout_alignParentRight="true"
+            android:id="@+id/close"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="14dp"
+            android:src="@drawable/close"/>
+
+    </RelativeLayout>
+
     <LinearLayout
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <TextView
+            android:id="@+id/setting_dialog_base_bt"
             android:layout_margin="@dimen/px30_dp"
             android:padding="3dp"
             android:layout_width="wrap_content"
@@ -18,6 +33,8 @@
             android:background="@drawable/white_blue_buttong_bg"
             android:text="底库设置"/>
         <TextView
+            android:visibility="gone"
+            android:id="@+id/setting_dialog_update"
             android:layout_margin="@dimen/px30_dp"
             android:padding="3dp"
             android:layout_width="wrap_content"

@@ -3,6 +3,16 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion SDK_VERSION
     buildToolsVersion "${BUILD_TOOLS}"
+
+    signingConfigs{
+        release{
+            storeFile keyStoreFile
+            storePassword '123456'
+            keyAlias 'tagging'
+            keyPassword '123456'
+        }
+    }
+
     defaultConfig {
         applicationId "com.face.tagging.tagging"
         minSdkVersion 15
@@ -13,10 +23,32 @@ android {
     }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    applicationVariants.all { variant ->
+            if (variant.buildType.name == 'release') {
+            variant.assemble.doLast {
+                variant.outputs.each { output ->
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith('release.apk')) {
+                        def fileName = "${project.name}${variant.flavorName}_${defaultConfig.versionName}"
+                        def outputPath = outPutFilePath;
+                        copy {
+                            from outputFile
+                            into outputPath
+                            rename { fileName + ".apk" }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 }
 
 dependencies {

@@ -1,4 +1,4 @@
-package com.face.tagging.view;
+package com.face.tagging.view.Dialog;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -33,16 +33,6 @@ public class TagDialog extends DialogFragment implements View.OnClickListener {
     private void init(View view) {
         view.findViewById(R.id.delete).setOnClickListener(this);
         view.findViewById(R.id.upload).setOnClickListener(this);
-    }
-
-    @Override
-    public void onStart() {
-//        getDialog().getWindow().setGravity(Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM);
-//        WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
-//        DisplayMetrics display = new DisplayMetrics();
-//        wm.getDefaultDisplay().getMetrics(display);
-//        getDialog().getWindow().setLayout(display.widthPixels, display.heightPixels);
-        super.onStart();
     }
 
     @Override

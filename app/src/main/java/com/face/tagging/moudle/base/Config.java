@@ -35,6 +35,8 @@ public class Config {
      */
     public final static String SAVE_WITH_TAG= "save_with_tag";
     public final static String SAVE_ALL_IN_ONE = "save_all_in_one";
+    public final static String SAVE_JPG = "save_jpg";
+    public final static String SAVE_YUV = "save_yuv";
 
     /**
      * sp保存底库方式为"SAVE_ALL_IN_ONE"时底库文件夹的名称

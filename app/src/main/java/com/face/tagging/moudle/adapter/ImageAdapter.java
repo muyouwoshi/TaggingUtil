@@ -1,4 +1,4 @@
-package com.face.tagging.moudle;
+package com.face.tagging.moudle.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -30,7 +30,7 @@ import util.observe.MsgMgr;
  * Created by zhoujie on 2018/1/2.
  */
 
-public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> implements TagAdapter.OnTagClickListener {
+public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> implements com.face.tagging.moudle.TagAdapter.OnTagClickListener {
     private volatile List<File> files = new CopyOnWriteArrayList<>();
     private volatile File[] oringinFilePaths;
     private volatile String[] tags;
@@ -271,7 +271,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         FileCallback(int index) {
             tag = tags[index];
             file = files.get(index);
-            newPath = Config.TAG_DIR + "/" + tag + "/" + file.getName();
+            newPath = Config.TAG_DIR + "/" + tag + "/"+tag+"."+ file.getName();
             originPath = oringinFilePaths[index].getPath();
         }
 

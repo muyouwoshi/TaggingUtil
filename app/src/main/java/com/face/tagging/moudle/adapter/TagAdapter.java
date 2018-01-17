@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import com.face.tagging.moudle.base.Config;
 import com.face.tagging.tagging.R;
-import com.face.tagging.view.TagDialog;
+import com.face.tagging.view.Dialog.TagDialog;
 
 import java.io.File;
 import java.util.ArrayList;
