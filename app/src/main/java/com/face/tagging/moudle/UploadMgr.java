@@ -225,8 +225,6 @@ public class UploadMgr {
                 return true;
             }
             percent = this.count * 100 / max;
-            Log.e("bug11", "count: "+count );
-            Log.e("bug11", "percent: "+percent );
             upPrograss((int)percent);
             return true;
         }

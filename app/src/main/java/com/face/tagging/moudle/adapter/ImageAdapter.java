@@ -2,18 +2,22 @@ package com.face.tagging.moudle.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.face.tagging.moudle.base.Config;
 import com.face.tagging.tagging.R;
+import com.face.tagging.view.Dialog.SaveBaseDialog;
+import com.face.tagging.view.Dialog.SetBaseDialog;
 
 import java.io.File;
-import java.util.Arrays;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,12 +35,12 @@ import util.observe.MsgMgr;
  */
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> implements com.face.tagging.moudle.TagAdapter.OnTagClickListener {
-    private volatile List<File> files = new CopyOnWriteArrayList<>();
-    private volatile File[] oringinFilePaths;
-    private volatile String[] tags;
+
+    private List<TagData> dataList = new CopyOnWriteArrayList<>();
+
     ConcurrentHashMap<Integer, Future> map = new ConcurrentHashMap<>();
     ExecutorService saveFileService = Executors.newFixedThreadPool(3);
-    private static int layoutWidth;
+    private int layoutWidth;
     private int angle = 270;
 
     Context context;
@@ -44,6 +48,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     float mScale = 0;
     private int startIndex, focusIndex = 1;
     int mCurrentItemOffset;
+
+    private FragmentManager fragmentManager;
 
     public ImageAdapter(Context context, RecyclerView recyclerView) {
         this.context = context;
@@ -53,28 +59,47 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     void init() {
         focusIndex = 1;
-        oringinFilePaths = new File[0];
-        tags = new String[0];
         layoutWidth = recyclerView.getWidth();
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        removeScrollListener();
+        recyclerView.addOnScrollListener(new MyScrollListener());
+    }
 
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                // dx>0则表示右滑, dx<0表示左滑, dy<0表示上滑, dy>0表示下滑
-                mCurrentItemOffset += dx;
-                computeCurrentItemPos();
-                onScrolledChangedCallback();
+    private void removeScrollListener() {
+        try {
+            Field field = RecyclerView.class.getDeclaredField("mScrollListeners");
+            field.setAccessible(true);
+            List<RecyclerView.OnScrollListener> listeners = (List<RecyclerView.OnScrollListener>) field.get(recyclerView);
+            if (listeners != null) {
+                for (RecyclerView.OnScrollListener listener : listeners) {
+                    if (listener instanceof MyScrollListener) {
+                        recyclerView.removeOnScrollListener(listener);
+                        break;
+                    }
+                }
             }
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class MyScrollListener extends RecyclerView.OnScrollListener {
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            super.onScrolled(recyclerView, dx, dy);
+            // dx>0则表示右滑, dx<0表示左滑, dy<0表示上滑, dy>0表示下滑
+            mCurrentItemOffset += dx;
+            computeCurrentItemPos();
+            onScrolledChangedCallback();
+        }
+    }
+
+    public void setFragmentManager(FragmentManager fm) {
+        fragmentManager = fm;
     }
 
     private void onScrolledChangedCallback() {
 
         int index = startIndex;
-//        if (startIndex == 0) {
-//            index = 1;
-//        }
 
         View childView = recyclerView.getLayoutManager().findViewByPosition(index);
         if (childView == null) return;
@@ -91,7 +116,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             index++;
             childView = recyclerView.getLayoutManager().findViewByPosition(index);
             if (childView == null) return;
-
         }
 
     }
@@ -113,22 +137,30 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     public void setData(File[] data) {
         int length = data.length;
-        files.clear();
-        files.addAll(Arrays.asList(data));
-        tags = new String[length];
-        oringinFilePaths = new File[length];
-        System.arraycopy(data, 0, oringinFilePaths, 0, length);
+        dataList = new CopyOnWriteArrayList<>();
+
+        for (int i = 0; i < length; i++) {
+            TagData tagData = new TagData();
+            tagData.file = data[i];
+            tagData.originFile = data[i];
+            dataList.add(tagData);
+        }
+
+        notifyDataSetChanged();
+        mCurrentItemOffset = 0;
+        startIndex = 0;
+        focusIndex = 0;
     }
 
-    public void nextAngle(){
+    public void nextAngle() {
         angle += 90;
-        if(angle == 360) angle = 0;
+        if (angle == 360) angle = 0;
         notifyDataSetChanged();
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0 || position == files.size() + 1) {
+        if (position == 0 || position == dataList.size() + 1) {
             return 1;
         }
         return super.getItemViewType(position);
@@ -154,14 +186,15 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     @Override
     public void onBindViewHolder(Holder holder, final int position) {
-        if (position == 0 || position == files.size() + 1) {
+        if (position == 0 || position == dataList.size() + 1) {
 //            holder.tagText.setVisibility(View.GONE);
         } else {
             holder.index = position;
-            File file = files.get(position - 1);
+            TagData tagData = dataList.get(position - 1);
+            File file = tagData.file;
 
             String fileName = file.getName();
-            String tag = tags[position - 1];
+            String tag = tagData.tag;
             Bitmap bitmap = getBitmap(file);
             holder.imageView.setImageBitmap(bitmap);
             holder.textView.setText(fileName);
@@ -171,13 +204,73 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             } else {
                 holder.tagText.setVisibility(View.GONE);
             }
+            holder.baseText.setVisibility(tagData.baseDir != null ? View.VISIBLE : View.GONE);
             holder.imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     unTag(position);
                 }
             });
+            holder.imageView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    TagData tagData = dataList.get(position - 1);
+
+                    if (tagData.tag != null) {
+                        SetBaseDialog dialog = new SetBaseDialog();
+                        dialog.setShowRemove(tagData.baseDir != null);
+                        dialog.setListener(new SetBaseDialog.SetBaseListener() {
+                            @Override
+                            public void onAdd() {
+                                addBase(position - 1);
+                            }
+
+                            @Override
+                            public void onRemove() {
+                                removeBase(position - 1);
+                            }
+                        });
+                        if (fragmentManager != null) {
+                            dialog.show(fragmentManager, "set_base_dialog");
+                        }
+                    }
+                    return true;
+                }
+            });
         }
+    }
+
+    private void addBase(final int index) {
+        SaveBaseDialog dialog = new SaveBaseDialog();
+
+        final TagData tagData = dataList.get(index);
+        final String newPath = Config.BASE_DIR + "/" + tagData.tag;
+        final String oldPath = tagData.originFile.getAbsolutePath();
+
+        dialog.setData(oldPath, newPath);
+        dialog.setSaveCallback(new SaveBaseDialog.SaveBaseCallback() {
+            @Override
+            public void savedSuccess(String savePath) {
+                tagData.baseDir = savePath;
+                refreshItem(index + 1);
+            }
+
+            @Override
+            public void saveFailed() {
+                Toast.makeText(context, "保存底库失败", Toast.LENGTH_SHORT).show();
+            }
+        });
+        dialog.show(fragmentManager, "save_base_dialog");
+    }
+
+    private void removeBase(final int index) {
+        TagData tagData = dataList.get(index);
+        refreshItem(index + 1);
+        File file = new File(tagData.baseDir);
+        if (file.exists()) {
+            file.delete();
+        }
+        tagData.baseDir = null;
     }
 
     Bitmap getBitmap(File file) {
@@ -197,13 +290,13 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     @Override
     public int getItemCount() {
-        return files.size() + 2;
+        return dataList.size() + 2;
     }
 
 
     @Override
     public void onClick(int position, String tag) {
-        if (files == null || files.size() == 0) {
+        if (dataList == null || dataList.size() == 0) {
             return;
         }
         tag(focusIndex, tag);
@@ -211,42 +304,48 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
 
     public void tag(int index, String tag) {
-        String oldTag = tags[index - 1];
+        TagData tagData = dataList.get(index - 1);
+        String oldTag = tagData.tag;
         if (oldTag == tag) {
             nextImage();
             return;
         }
-        tags[index - 1] = tag;
+
+        if (tagData.baseDir != null) {
+            removeBase(index - 1);
+        }
+
+        tagData.tag = tag;
         refreshItem(index);
-//        resetFile(index-1);
         copyFile(index - 1, oldTag);
         nextImage();
     }
 
     private synchronized void copyFile(final int index, final String oldTag) {
         Future future = map.get(index);
+        final String tagFilePath = getTagFilePath(oldTag, dataList.get(index).file.getName());
         if (future != null) {
             future.cancel(true);
             if (future.isCancelled()) {
                 if (oldTag != null) {
-                    String path = Config.TAG_DIR + "/" + oldTag + "/" + files.get(index).getName();
-                    deleteTagFile(path);
+                    deleteTagFile(tagFilePath);
                 }
             } else if (oldTag != null) {
                 MsgMgr.getInstance().delay(new Runnable() {
                     @Override
                     public void run() {
-                        String path = Config.TAG_DIR + "/" + oldTag + "/" + files.get(index).getName();
-                        deleteTagFile(path);
+                        deleteTagFile(tagFilePath);
                     }
                 }, 1000);
             }
-        }
-        if (oldTag != null) {
-            String path = Config.TAG_DIR + "/" + oldTag + "/" + files.get(index).getName();
-            deleteTagFile(path);
+        } else if (oldTag != null) {
+            deleteTagFile(tagFilePath);
         }
         map.replace(index, saveFileService.submit(new FileCallback(index)));
+    }
+
+    private String getTagFilePath(String tag, String fileName) {
+        return Config.TAG_DIR + "/" + tag + "/" + "tag." + fileName;
     }
 
     private void deleteTagFile(String path) {
@@ -255,11 +354,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     public void unTag(final int index) {
-        String oldTag = tags[index -1];
-        tags[index - 1] = null;
+        TagData tagData = dataList.get(index - 1);
+        String oldTag = tagData.tag;
+        tagData.tag = null;
+        if (tagData.baseDir != null) {
+            removeBase(index - 1);
+        }
         refreshItem(index);
         copyFile(index - 1, oldTag);
-//        resetFile(index-1);
     }
 
     class FileCallback implements Callable<Boolean> {
@@ -269,10 +371,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         final String originPath;
 
         FileCallback(int index) {
-            tag = tags[index];
-            file = files.get(index);
-            newPath = Config.TAG_DIR + "/" + tag + "/"+tag+"."+ file.getName();
-            originPath = oringinFilePaths[index].getPath();
+            TagData tagData = dataList.get(index);
+            tag = tagData.tag;
+            file = tagData.file;
+            newPath = getTagFilePath(tag, file.getName());
+            originPath = tagData.originFile.getPath();
         }
 
         @Override
@@ -297,7 +400,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         MsgMgr.getInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String tag = tags[index - 1];
+                TagData tagData = dataList.get(index - 1);
+                String tag = tagData.tag;
                 RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(index);
                 if (viewHolder != null && viewHolder instanceof Holder) {
                     Holder holder = (Holder) viewHolder;
@@ -308,139 +412,12 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                         } else {
                             holder.tagText.setVisibility(View.GONE);
                         }
+                        holder.baseText.setVisibility(tagData.baseDir != null ? View.VISIBLE : View.GONE);
                     }
                 }
             }
         });
     }
-
-    synchronized void resetFile(int index) {
-//        File file = files.get(index);
-//        String tag = tags[index];
-//        String newPath;
-//        if (tag == null) {
-//            newPath = oringinFilePaths[index].getAbsolutePath();
-//        } else {
-//            newPath = Config.TAG_DIR + "/" + tag + "/" + file.getName();
-//        }
-//        String oldPath = file.getAbsolutePath();
-//
-//        MyTask runTask = map.get(index);
-//
-//
-//        if (runTask != null) {
-//            String rNewpath = runTask.newPath;
-//            String rOldPath = runTask.oldPath;
-//            if (rNewpath == newPath && rOldPath == oldPath) {
-//                return;
-//            } else if(rNewpath == oldPath){
-//                runTask.future.cancel(true);
-//                map.remove(index);
-//                try {
-//                    FileUtil.deleteFile(new File(rNewpath));
-//                }catch (Exception e){
-//                    e.printStackTrace();
-//                }
-//            }
-//            else {
-//                if (runTask.future.isDone() && !runTask.future.isCancelled()) {
-//                    runTask.future.cancel(true);
-//                    final MyCallback task = new MyCallback(oldPath, newPath);
-//                    map.remove(index);
-//                    submit(task, index);
-//                }
-//            }
-//        }
-//        else{
-//            final MyCallback task = new MyCallback(oldPath, newPath);
-//            submit(task, index);
-//        }
-    }
-
-    private void submit(final MyCallback task, final int index) {
-//
-//        Observable.create(new ObservableOnSubscribe<Boolean>() {
-//            @Override
-//            public void subscribe(ObservableEmitter<Boolean> e) throws Exception {
-//                final Future<Boolean> tasks = saveFileService.submit(task);
-//                map.putIfAbsent(index,new MyTask(task.oldPath,task.newPath,tasks));
-//                boolean b = tasks.get();
-//                e.onNext(b);
-//                e.onComplete();
-//            }
-//        }).subscribeOn(Schedulers.io()).subscribe(new Observer<Boolean>() {
-//            @Override
-//            public void onSubscribe(Disposable d) {
-//
-//            }
-//
-//            @Override
-//            public void onNext(Boolean value) {
-//                if (value) {
-//                    resetFileSrc(index,task.newPath);
-//                }
-//            }
-//
-//            @Override
-//            public void onError(Throwable e) {
-//                e.printStackTrace();
-//            }
-//
-//            @Override
-//            public void onComplete() {
-//
-//            }
-//        });
-    }
-
-    public synchronized void resetFileSrc(int index, String path) {
-        FileUtil.deleteFile(files.get(index));
-        files.set(index, new File(path));
-        map.remove(index);
-    }
-
-
-    class MyTask {
-
-        String oldPath;
-        String newPath;
-        Future future;
-
-        public MyTask(final String oldPath, final String newPath, Future future) {
-            this.future = future;
-            this.oldPath = oldPath;
-            this.newPath = newPath;
-        }
-
-    }
-
-    class MyCallback implements Callable<Boolean> {
-
-        String oldPath;
-        String newPath;
-
-        public MyCallback(final String oldPath, final String newPath) {
-            this.oldPath = oldPath;
-            this.newPath = newPath;
-        }
-
-        @Override
-        public Boolean call() throws Exception {
-            boolean hasSave = false;
-            try {
-                File file = new File(oldPath);
-                FileUtil.copyFile(file.getAbsolutePath(), newPath);
-                FileUtil.deleteFile(file);
-                hasSave = true;
-            } catch (Exception e) {
-                e.printStackTrace();
-                hasSave = false;
-            } finally {
-                return hasSave;
-            }
-        }
-    }
-
 
     void nextImage() {
         recyclerView.smoothScrollBy(480, 0);
@@ -450,7 +427,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         int index;
         ImageView imageView;
         TextView textView;
-        TextView tagText;
+        TextView tagText, baseText;
         View view;
 
         public Holder(View itemView) {
@@ -458,10 +435,17 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             imageView = itemView.findViewById(R.id.tag_image);
             textView = itemView.findViewById(R.id.tag_name);
             tagText = itemView.findViewById(R.id.tag);
+            baseText = itemView.findViewById(R.id.is_base_tv);
             if (imageView == null) {
                 view = itemView.findViewById(R.id.blank);
             }
-
         }
+    }
+
+    private class TagData {
+        File file;
+        File originFile;
+        String tag;
+        String baseDir;
     }
 }

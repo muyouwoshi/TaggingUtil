@@ -30,5 +30,20 @@
         android:gravity="center"
         android:textColor="@color/red"/>
 
+    <TextView
+        android:id="@+id/is_base_tv"
+        android:width="400px"
+        android:layout_alignBottom="@+id/tag_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/common_round_dark_transparent"
+        android:padding="3dp"
+        android:layout_margin="3dp"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:text="底库"
+        android:visibility="gone"
+        android:textColor="@color/txt_color_green"/>
+
 
 </RelativeLayout>

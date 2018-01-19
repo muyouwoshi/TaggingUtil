@@ -1,4 +1,4 @@
-package com.face.tagging.moudle.base;
+package com.face.tagging.moudle.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;

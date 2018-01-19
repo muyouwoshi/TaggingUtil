@@ -22,7 +22,7 @@ import android.widget.Toast;
 
 import com.face.tagging.moudle.UploadMgr;
 import com.face.tagging.moudle.base.Config;
-import com.face.tagging.moudle.base.FileAdapter;
+import com.face.tagging.moudle.adapter.FileAdapter;
 import com.face.tagging.tagging.R;
 import com.jcraft.jsch.ChannelSftp;
 

@@ -181,6 +181,7 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
         imageAdapter.setData(imagesPath);
         tagAdapter.setClickListener(imageAdapter);
         recyclerView.setAdapter(imageAdapter);
+        imageAdapter.setFragmentManager(getChildFragmentManager());
     }
 
     private void showBase(String filePath) {
