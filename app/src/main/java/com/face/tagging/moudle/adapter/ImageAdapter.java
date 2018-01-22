@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,10 @@ import com.face.tagging.view.Dialog.SetBaseDialog;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -49,7 +53,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     private int startIndex, focusIndex = 1;
     int mCurrentItemOffset;
 
+    private SelectBaseCallback selectBaseCallback;
+
     private FragmentManager fragmentManager;
+
+    private Map<String,Integer> baseMap;
 
     public ImageAdapter(Context context, RecyclerView recyclerView) {
         this.context = context;
@@ -80,6 +88,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void setSelectBaseCallback(SelectBaseCallback callback) {
+        selectBaseCallback = callback;
     }
 
     private class MyScrollListener extends RecyclerView.OnScrollListener {
@@ -138,6 +150,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     public void setData(File[] data) {
         int length = data.length;
         dataList = new CopyOnWriteArrayList<>();
+        baseMap = new HashMap<>();
 
         for (int i = 0; i < length; i++) {
             TagData tagData = new TagData();
@@ -252,7 +265,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             @Override
             public void savedSuccess(String savePath) {
                 tagData.baseDir = savePath;
+                removeSameBase(index,savePath);
                 refreshItem(index + 1);
+                if(selectBaseCallback !=null){
+                    selectBaseCallback.onBaseAdd(savePath);
+                }
             }
 
             @Override
@@ -263,14 +280,34 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         dialog.show(fragmentManager, "save_base_dialog");
     }
 
+    /**
+     * 移除相同路径下的相同底库
+     * @param index 新的底库图片索引
+     * @param savePath 新的底库图片保存路径
+     */
+    private void removeSameBase(int index,String savePath) {
+        if(baseMap.get(savePath) != null) {
+            int oldIndex = baseMap.get(savePath);
+            TagData tagData = dataList.get(oldIndex);
+            tagData.baseDir = null;
+            refreshItem(oldIndex + 1);
+        }
+
+        baseMap.put(savePath, index);
+    }
+
     private void removeBase(final int index) {
+        if(selectBaseCallback !=null){
+            selectBaseCallback.onBaseRemoved();
+        }
         TagData tagData = dataList.get(index);
-        refreshItem(index + 1);
         File file = new File(tagData.baseDir);
         if (file.exists()) {
             file.delete();
         }
         tagData.baseDir = null;
+        refreshItem(index + 1);
+
     }
 
     Bitmap getBitmap(File file) {
@@ -447,5 +484,10 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         File originFile;
         String tag;
         String baseDir;
+    }
+
+    public interface SelectBaseCallback{
+        void onBaseAdd(String path);
+        void onBaseRemoved();
     }
 }

@@ -182,6 +182,7 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
         tagAdapter.setClickListener(imageAdapter);
         recyclerView.setAdapter(imageAdapter);
         imageAdapter.setFragmentManager(getChildFragmentManager());
+        imageAdapter.setSelectBaseCallback(new MySelectBaseCallback());
     }
 
     private void showBase(String filePath) {
@@ -190,7 +191,8 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
         } else if (baseSetBean.baseSelectSet == Config.BASE_ALL) {
             refreshBase(filePath, imagesPath);
         } else if (baseSetBean.baseSelectSet == Config.BASE_SAME_AS_IMAGE) {
-            refreshBaseFromImage(filePath, baseSetBean.baseSelectName);
+//            refreshBaseFromImage(filePath, baseSetBean.baseSelectName);
+
         }
     }
 
@@ -245,26 +247,13 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
 
         baseIamge.setImageBitmap(bitmap);
         baseNameTv.setText(fileName);
-        if (baseSetBean.saveAllInOne) {
-            String dstPath = Config.BASE_DIR + "/" + baseSetBean.saveDirName + "/" + fileName;
-            saveBase(file.getAbsolutePath(), dstPath);
-        }
-    }
-
-    private void saveBase(final String src, final String des) {
-        Observable.create(new ObservableOnSubscribe<Void>() {
-            @Override
-            public void subscribe(ObservableEmitter<Void> e) throws Exception {
-                FileUtil.copyFile(src, des);
-            }
-        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
 
     private void showAdd() {
         if (tagText.getVisibility() == View.VISIBLE) {
             tagText.setVisibility(View.GONE);
-            tagAdapter.addTag(tagText.getText().toString(), hasTagPath());
+            tagAdapter.addTag(tagText.getText().toString());
             button.setText("新建标签");
 
         } else {
@@ -273,13 +262,6 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
             tagText.setFocusable(true);
             button.setText("确定");
         }
-    }
-
-    private String hasTagPath() {
-//        if(baseSetBean.saveWithTag){
-//
-//        }
-        return null;
     }
 
     private void selectFile(MyFileSelectListener listener) {
@@ -326,5 +308,17 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
         }
     }
 
+    class MySelectBaseCallback implements ImageAdapter.SelectBaseCallback{
 
+        @Override
+        public void onBaseAdd(String path) {
+            refreshBase(path);
+        }
+
+        @Override
+        public void onBaseRemoved() {
+            baseIamge.setImageBitmap(null);
+            baseNameTv.setText("");
+        }
+    }
 }

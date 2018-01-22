@@ -46,6 +46,9 @@ public class BaseSettingFragment extends Fragment implements RadioGroup.OnChecke
 
     private void initData() {
         baseSetData = CenterMgr.getinstance().getBaseSetting();
+        baseSetData.baseSelectSet = Config.BASE_SAME_AS_IMAGE;
+        baseSetData.saveAllInOne = false;
+        baseSetData.saveWithTag = false;
     }
 
     private void initView(View view) {
@@ -60,7 +63,7 @@ public class BaseSettingFragment extends Fragment implements RadioGroup.OnChecke
                 break;
             case Config.BASE_SAME_AS_IMAGE:
                 settingGroup.check(R.id.same_as_image);
-                baseNameET.setVisibility(View.VISIBLE);
+//                baseNameET.setVisibility(View.VISIBLE);
                 break;
             case Config.BASE_ALL:
                 settingGroup.check(R.id.all_base);

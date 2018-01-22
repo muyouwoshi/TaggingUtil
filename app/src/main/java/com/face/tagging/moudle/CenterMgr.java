@@ -32,7 +32,7 @@ public class CenterMgr {
     public synchronized BaseSettingData getBaseSetting(){
         if(baseSettingData == null){
             baseSettingData = new BaseSettingData();
-            baseSettingData.baseSelectSet = PSP.getInstance().getInt(Config.SP_BASE_SETTING, Config.BASE_SIMPLE);
+            baseSettingData.baseSelectSet = PSP.getInstance().getInt(Config.SP_BASE_SETTING, Config.BASE_SAME_AS_IMAGE);
             baseSettingData.baseSelectName = PSP.getInstance().getString(Config.SP_BASE_NAME, "base");
             baseSettingData.baseReangle = PSP.getInstance().getInt(Config.SP_BASE_ANGLE,Config.BASE_ANGLE_270);
             baseSettingData.saveAllInOne = PSP.getInstance().getBoolean(Config.SAVE_ALL_IN_ONE,false);

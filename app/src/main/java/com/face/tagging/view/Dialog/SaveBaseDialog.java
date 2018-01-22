@@ -264,7 +264,7 @@ public class SaveBaseDialog extends DialogFragment implements View.OnClickListen
     @Override
     public void onItemClick(int position, String fileName) {
         if (position == 0 && fileName.equals("返回上一层")) {
-            if (dstDir.equals(Environment.getDownloadCacheDirectory().getAbsolutePath())) {
+            if (dstDir.equals(Environment.getExternalStorageDirectory().getAbsolutePath())) {
                 Toast.makeText(getContext(), "当前目录为顶层目录", Toast.LENGTH_SHORT).show();
             } else {
                 dstDir = dstDir.substring(0, dstDir.lastIndexOf("/"));

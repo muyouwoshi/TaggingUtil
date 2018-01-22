@@ -12,6 +12,7 @@
         android:orientation="vertical"
         android:background="@drawable/common_retangle_normal">
         <RadioGroup
+            android:visibility="gone"
             android:id="@+id/base_setting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -84,7 +85,7 @@
     </RadioGroup>
 
     <LinearLayout
-
+        android:visibility="gone"
         android:layout_margin="10dp"
         android:layout_width="match_parent"
         android:layout_height="50dp">
