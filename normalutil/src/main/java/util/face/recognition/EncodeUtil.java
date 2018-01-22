@@ -30,6 +30,9 @@ public class EncodeUtil {
     }
 
     public static Bitmap adjustPhotoRotation(Bitmap bm, final int orientationDegree) {
+        if(bm == null){
+            return null;
+        }
         Matrix m = new Matrix();
         m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
 
