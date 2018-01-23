@@ -68,6 +68,36 @@ public class FileUtil {
         return builder.toString();
     }
 
+
+    public static void copyFile(String oldPath, String newPath, boolean keepSameNameFile)throws Exception {
+        File newFile = new File(newPath);
+        File parentFile = newFile.getParentFile();
+        if(parentFile.exists() && parentFile.isDirectory()){
+            File[] files = parentFile.listFiles();
+            int n = 1;
+            String perfix = newPath;
+            String suffix = "";
+            if(newPath.lastIndexOf(".") > 0){
+                perfix = newPath.substring(0,newPath.lastIndexOf("."));
+                suffix = newPath.replace(perfix,"");
+            }
+            while(hasSameName(files,newPath)){
+                newPath = perfix+"("+String.valueOf(n)+")"+suffix;
+                n++;
+            }
+        }
+        copyFile(oldPath,newPath);
+    }
+
+    private static boolean hasSameName(File[] files, String newPath) {
+        for(File file:files){
+            if(file.getAbsolutePath().equals(newPath)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * 复制单个文件
      *

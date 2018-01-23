@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +19,6 @@ import com.face.tagging.view.Dialog.SetBaseDialog;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -426,7 +424,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                 return true;
             } else {
                 String oldPath = file.getAbsolutePath();
-                FileUtil.copyFile(oldPath, newPath);
+                FileUtil.copyFile(oldPath, newPath,true);
                 return true;
             }
         }
