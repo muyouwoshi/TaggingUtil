@@ -5,6 +5,7 @@
     android:layout_margin="5dp"
     android:orientation="vertical">
     <TextView
+        android:visibility="gone"
         android:gravity="center"
         android:id="@+id/add_base"
         android:layout_width="100dp"
@@ -22,5 +23,5 @@
         android:padding="10dp"
         android:layout_marginTop="1dp"
         android:background="@drawable/common_retangle_normal"
-        android:text="删除底库"/>
+        android:text="删除"/>
 </LinearLayout>

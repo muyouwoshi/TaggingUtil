@@ -207,6 +207,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             String fileName = file.getName();
             String tag = tagData.tag;
             Bitmap bitmap = getBitmap(file);
+            if(!file.exists()) fileName = "已删除";
             holder.imageView.setImageBitmap(bitmap);
             holder.textView.setText(fileName);
             if (tag != null) {
@@ -227,7 +228,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                 public boolean onLongClick(View v) {
                     TagData tagData = dataList.get(position - 1);
 
-                    if (tagData.tag != null) {
+//                    if (tagData.tag != null) {
                         SetBaseDialog dialog = new SetBaseDialog();
                         dialog.setShowRemove(tagData.baseDir != null);
                         dialog.setListener(new SetBaseDialog.SetBaseListener() {
@@ -238,13 +239,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
                             @Override
                             public void onRemove() {
-                                removeBase(position - 1);
+                                removeFile(position - 1);
+//                                removeBase(position - 1);
                             }
                         });
                         if (fragmentManager != null) {
                             dialog.show(fragmentManager, "set_base_dialog");
                         }
-                    }
+//                    }
                     return true;
                 }
             });
@@ -294,6 +296,17 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         baseMap.put(savePath, index);
     }
 
+
+    private void removeFile(int index) {
+        TagData tagData = dataList.get(index);
+        File file = tagData.originFile;
+        if (file.exists()) {
+            file.delete();
+        }
+        refreshItem(index + 1);
+    }
+
+
     private void removeBase(final int index) {
         if(selectBaseCallback !=null){
             selectBaseCallback.onBaseRemoved();
@@ -314,6 +327,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             bitmap = null;
         } else if (file.getName().contains(".png") || file.getName().contains(".jpg")) {
             bitmap = EncodeUtil.readRGBImage(file.getAbsolutePath());
+            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, angle);
         } else if (!file.getName().contains(".DS_Store")) {
             bitmap = EncodeUtil.readYUVImage(file.getPath(), 640, 480);
             bitmap = EncodeUtil.adjustPhotoRotation(bitmap, angle);
@@ -440,7 +454,13 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                 RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(index);
                 if (viewHolder != null && viewHolder instanceof Holder) {
                     Holder holder = (Holder) viewHolder;
-                    {
+                    File file = tagData.file;
+
+                    String fileName = file.getName();
+                    Bitmap bitmap = getBitmap(file);
+                    if(!file.exists()) fileName = "已删除";
+                    holder.imageView.setImageBitmap(bitmap);
+
                         if (tag != null) {
                             holder.tagText.setText(tag);
                             holder.tagText.setVisibility(View.VISIBLE);
@@ -448,7 +468,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                             holder.tagText.setVisibility(View.GONE);
                         }
                         holder.baseText.setVisibility(tagData.baseDir != null ? View.VISIBLE : View.GONE);
-                    }
+
                 }
             }
         });

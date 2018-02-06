@@ -72,7 +72,11 @@ public class FileUtil {
     public static void copyFile(String oldPath, String newPath, boolean keepSameNameFile)throws Exception {
         File newFile = new File(newPath);
         File parentFile = newFile.getParentFile();
-        if(parentFile.exists() && parentFile.isDirectory()){
+        parentFile.mkdirs();
+//        if(!newFile.exists()){
+//            newFile.createNewFile();
+//        }
+        if(parentFile.exists() && parentFile.isDirectory() && keepSameNameFile){
             File[] files = parentFile.listFiles();
             int n = 1;
             String perfix = newPath;
@@ -106,7 +110,7 @@ public class FileUtil {
      */
     public static void copyFile(String oldPath, String newPath) throws Exception {
         InputStream inStream = null;
-        FileOutputStream fs = null;
+         FileOutputStream fs = null;
         try {
             int bytesum = 0;
             int byteread;
