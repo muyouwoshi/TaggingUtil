@@ -380,7 +380,35 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     private String getTagFilePath(String tag, String fileName) {
+//        String newPath = Config.TAG_DIR + "/" + tag + "/" + "tag." + fileName;
+//
+//        File newFile = new File(newPath);
+//        File parentFile = newFile.getParentFile();
+//        if(parentFile.exists() && parentFile.isDirectory()){
+//            File[] files = parentFile.listFiles();
+//            int n = 1;
+//            String perfix = newPath;
+//            String suffix = "";
+//            if(newPath.lastIndexOf(".") > 0){
+//                perfix = newPath.substring(0,newPath.lastIndexOf("."));
+//                suffix = newPath.replace(perfix,"");
+//            }
+//            while(hasSameName(files,newPath)){
+//                newPath = perfix+"("+String.valueOf(n)+")"+suffix;
+//                n++;
+//            }
+//        }
+
         return Config.TAG_DIR + "/" + tag + "/" + "tag." + fileName;
+    }
+
+    private boolean hasSameName(File[] files, String newPath) {
+        for(File file:files){
+            if(file.getAbsolutePath().equals(newPath)){
+                return true;
+            }
+        }
+        return false;
     }
 
     private void deleteTagFile(String path) {
@@ -482,6 +510,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
         File originFile;
         String tag;
         String baseDir;
+        String tagFile;
     }
 
     public interface SelectBaseCallback{
