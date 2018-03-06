@@ -246,7 +246,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                         if (fragmentManager != null) {
                             dialog.show(fragmentManager, "set_base_dialog");
                         }
-//                    }
+//                     }
                     return true;
                 }
             });
@@ -394,7 +394,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     private String getTagFilePath(String tag, String fileName) {
-        return Config.TAG_DIR + "/" + tag + "/" + "tag." + fileName;
+        return Config.TAG_DIR + "/" + tag + "/" + tag + "." + fileName;
     }
 
     private void deleteTagFile(String path) {
