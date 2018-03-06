@@ -3,6 +3,7 @@ package com.face.tagging.tagging;
 import android.content.Context;
 import android.os.Environment;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -20,6 +21,14 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
         assertEquals(4, 2 + 2);
+    }
+
+    @Test
+    public void checkFile(){
+        String name = "03-04-17_38_55.649_current_19_-1_-1.nv21.640.480";
+        String newName = name.replace("current","last");
+        String subStrring = newName.substring(newName.lastIndexOf("last")+4,newName.indexOf(".nv21"));
+        Assert.assertEquals("_19_-1_-1",subStrring);
     }
 
 

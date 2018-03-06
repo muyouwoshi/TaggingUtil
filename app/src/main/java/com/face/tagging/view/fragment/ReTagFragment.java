@@ -159,6 +159,13 @@ public class ReTagFragment extends Fragment implements View.OnClickListener, Tag
                 if (file.exists()) {
                     if (file.isDirectory()) {
                         return false;
+                    }else if(name.contains("current")|| name.contains("last")){
+                        if(!name.contains(".nv21"))return false;
+                        String newName = name.replace("current","last");
+                        String subStrring = newName.substring(newName.lastIndexOf("last")+4,newName.indexOf(".nv21"));
+                        if(subStrring.split("_").length>2){
+                            return true;
+                        }else return false;
                     }
                 } else return false;
                 return true;
