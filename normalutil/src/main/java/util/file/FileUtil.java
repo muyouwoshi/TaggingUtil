@@ -1,5 +1,7 @@
 package util.file;
 
+import android.util.Log;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -69,29 +71,29 @@ public class FileUtil {
     }
 
 
-    public static void copyFile(String oldPath, String newPath, boolean keepSameNameFile)throws Exception {
+    public static void copyFile(String oldPath, String newPath, boolean keepSameNameFile) throws Exception {
         File newFile = new File(newPath);
         File parentFile = newFile.getParentFile();
-        if(parentFile.exists() && parentFile.isDirectory()){
+        if (parentFile.exists() && parentFile.isDirectory()) {
             File[] files = parentFile.listFiles();
             int n = 1;
             String perfix = newPath;
             String suffix = "";
-            if(newPath.lastIndexOf(".") > 0){
-                perfix = newPath.substring(0,newPath.lastIndexOf("."));
-                suffix = newPath.replace(perfix,"");
+            if (newPath.lastIndexOf(".") > 0) {
+                perfix = newPath.substring(0, newPath.lastIndexOf("."));
+                suffix = newPath.replace(perfix, "");
             }
-            while(hasSameName(files,newPath)){
-                newPath = perfix+"("+String.valueOf(n)+")"+suffix;
+            while (hasSameName(files, newPath)) {
+                newPath = perfix + "(" + String.valueOf(n) + ")" + suffix;
                 n++;
             }
         }
-        copyFile(oldPath,newPath);
+        copyFile(oldPath, newPath);
     }
 
     private static boolean hasSameName(File[] files, String newPath) {
-        for(File file:files){
-            if(file.getAbsolutePath().equals(newPath)){
+        for (File file : files) {
+            if (file.getAbsolutePath().equals(newPath)) {
                 return true;
             }
         }
@@ -112,7 +114,13 @@ public class FileUtil {
             int byteread;
             File oldfile = new File(oldPath);
             File newFile = new File(newPath);
-            newFile.getParentFile().mkdirs();
+            File parentFile = newFile.getParentFile();
+            if (!parentFile.exists()) {
+                if (!parentFile.mkdirs()) {
+                    System.out.println("FileUtil.copyFile.mkdir  false");
+                    return;
+                }
+            }
             if (oldfile.exists()) { //文件存在时
                 inStream = new FileInputStream(oldPath); //读入原文件
                 fs = new FileOutputStream(newPath);
@@ -123,19 +131,20 @@ public class FileUtil {
                     fs.write(buffer, 0, byteread);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw e;
-        }finally {
-            if(inStream !=null){
+        } finally {
+            if (inStream != null) {
                 inStream.close();
             }
-            if(fs != null){
+            if (fs != null) {
                 fs.close();
             }
         }
     }
 
-    /**git
+    /**
+     * git
      * 复制整个文件夹内容
      *
      * @param oldPath String 原文件路径 如：c:/fqf
