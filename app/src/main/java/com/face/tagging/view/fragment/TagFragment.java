@@ -41,7 +41,7 @@ import util.file.FileUtil;
  * Created by zhoujie on 2017/12/29.
  */
 
-public class ReTagFragment extends Fragment implements View.OnClickListener, TagAdapter.OntagOperatedListener {
+public class TagFragment extends Fragment implements View.OnClickListener, TagAdapter.OntagOperatedListener {
     RecyclerView recyclerView, tagView;
     ImageView baseIamge;
     static final int SELECT_BASE = 0, SELECT_IAMGE = 1;

@@ -2,12 +2,14 @@ package com.megvii.csp.explorer;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -169,6 +171,7 @@ public class FileExplorerDialog extends Dialog implements AdapterView.OnItemClic
                 convertView.setTag(holder);
                 holder.mFileNameView = (TextView) convertView.findViewById(R.id.file_path);
                 holder.mSelectBtn = (TextView) convertView.findViewById(R.id.choose);
+                holder.fileIcon = (ImageView) convertView.findViewById(R.id.file_list_icon);
             } else {
                 holder = (ViewHolder) convertView.getTag();
             }
@@ -190,6 +193,7 @@ public class FileExplorerDialog extends Dialog implements AdapterView.OnItemClic
     private class ViewHolder {
         TextView mFileNameView;
         TextView mSelectBtn;
+        ImageView fileIcon;
 
         void updateView(final String fileName) {
             final boolean isParent = fileName.equals("..");
@@ -199,6 +203,11 @@ public class FileExplorerDialog extends Dialog implements AdapterView.OnItemClic
             } else {
                 mFileNameView.setText(fileName);
                 mSelectBtn.setVisibility(View.VISIBLE);
+                if(new File(mCurrentPath, fileName).isFile()){
+                    fileIcon.setImageResource(R.drawable.file);
+                }else{
+                    fileIcon.setImageResource(R.drawable.filedir);
+                }
             }
 
             mSelectBtn.setOnClickListener(new View.OnClickListener() {
