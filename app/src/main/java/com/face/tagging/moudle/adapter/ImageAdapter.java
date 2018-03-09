@@ -358,16 +358,17 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     private synchronized void copyFile(final int index, final String oldTag) {
         Future future = map.get(index);
-        final String tagFilePath = getTagFilePath(oldTag, dataList.get(index).file.getName());
-        final String oldFilepath = dataList.get(index).tagFile;
+        final TagData tagData = dataList.get(index);
+        final String oldFilepath = tagData.tagFile;
         if (future != null) {
             future.cancel(true);
             if (future.isCancelled()) {
                 if (oldTag != null) {
-//                    deleteTagFile(tagFilePath);
+                    tagData.tagFile = null;
                     deleteTagFile(oldFilepath);
                 }
             } else if (oldTag != null) {
+                tagData.tagFile = null;
                 MsgMgr.getInstance().delay(new Runnable() {
                     @Override
                     public void run() {
@@ -376,6 +377,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
                 }, 1000);
             }
         } else if (oldTag != null) {
+            tagData.tagFile = null;
             deleteTagFile(oldFilepath);
         }
         map.replace(index, saveFileService.submit(new FileCallback(index)));
@@ -414,6 +416,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     private void deleteTagFile(String path) {
+        if(path == null || path.matches("\\s*")) return;
         File file = new File(path);
         if (file.exists()) file.delete();
     }
