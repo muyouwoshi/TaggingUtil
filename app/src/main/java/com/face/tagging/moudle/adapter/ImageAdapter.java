@@ -358,48 +358,52 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
 
     private synchronized void copyFile(final int index, final String oldTag) {
         Future future = map.get(index);
-        final String tagFilePath = getTagFilePath(oldTag, dataList.get(index).file.getName());
+        final TagData tagData = dataList.get(index);
+        final String oldFilepath = tagData.tagFile;
         if (future != null) {
             future.cancel(true);
             if (future.isCancelled()) {
                 if (oldTag != null) {
-                    deleteTagFile(tagFilePath);
+                    tagData.tagFile = null;
+                    deleteTagFile(oldFilepath);
                 }
             } else if (oldTag != null) {
+                tagData.tagFile = null;
                 MsgMgr.getInstance().delay(new Runnable() {
                     @Override
                     public void run() {
-                        deleteTagFile(tagFilePath);
+                        deleteTagFile(oldFilepath);
                     }
                 }, 1000);
             }
         } else if (oldTag != null) {
-            deleteTagFile(tagFilePath);
+            tagData.tagFile = null;
+            deleteTagFile(oldFilepath);
         }
         map.replace(index, saveFileService.submit(new FileCallback(index)));
     }
 
     private String getTagFilePath(String tag, String fileName) {
-//        String newPath = Config.TAG_DIR + "/" + tag + "/" + "tag." + fileName;
-//
-//        File newFile = new File(newPath);
-//        File parentFile = newFile.getParentFile();
-//        if(parentFile.exists() && parentFile.isDirectory()){
-//            File[] files = parentFile.listFiles();
-//            int n = 1;
-//            String perfix = newPath;
-//            String suffix = "";
-//            if(newPath.lastIndexOf(".") > 0){
-//                perfix = newPath.substring(0,newPath.lastIndexOf("."));
-//                suffix = newPath.replace(perfix,"");
-//            }
-//            while(hasSameName(files,newPath)){
-//                newPath = perfix+"("+String.valueOf(n)+")"+suffix;
-//                n++;
-//            }
-//        }
+        String newPath = Config.TAG_DIR + "/" + tag + "/" + tag+"_" + fileName;
 
-        return Config.TAG_DIR + "/" + tag + "/" + "tag." + fileName;
+        File newFile = new File(newPath);
+        File parentFile = newFile.getParentFile();
+        if(parentFile.exists() && parentFile.isDirectory()){
+            File[] files = parentFile.listFiles();
+            int n = 1;
+            String perfix = newPath;
+            String suffix = "";
+            if(newPath.lastIndexOf(".") > 0){
+                perfix = newPath.substring(0,newPath.lastIndexOf("."));
+                suffix = newPath.replace(perfix,"");
+            }
+            while(hasSameName(files,newPath)){
+                newPath = perfix+"("+String.valueOf(n)+")"+suffix;
+                n++;
+            }
+        }
+        return newPath;
+//        return Config.TAG_DIR + "/" + tag + "/" + tag+"_" + fileName;
     }
 
     private boolean hasSameName(File[] files, String newPath) {
@@ -412,6 +416,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
     }
 
     private void deleteTagFile(String path) {
+        if(path == null || path.matches("\\s*")) return;
         File file = new File(path);
         if (file.exists()) file.delete();
     }
@@ -439,6 +444,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             file = tagData.file;
             newPath = getTagFilePath(tag, file.getName());
             originPath = tagData.originFile.getPath();
+            tagData.tagFile = newPath;
         }
 
         @Override
