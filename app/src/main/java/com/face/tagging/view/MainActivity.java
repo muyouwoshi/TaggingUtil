@@ -9,7 +9,7 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import com.face.tagging.tagging.R;
-import com.face.tagging.view.fragment.ReTagFragment;
+import com.face.tagging.view.fragment.TagFragment;
 
 public class MainActivity extends AppCompatActivity{
     @Override
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void initView() {
-        getSupportFragmentManager().beginTransaction().add(R.id.content,new ReTagFragment(),"tag").commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.content,new TagFragment(),"tag").commit();
     }
 
     private void initData() {
