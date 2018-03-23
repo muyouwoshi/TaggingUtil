@@ -314,6 +314,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             bitmap = null;
         } else if (file.getName().contains(".png") || file.getName().contains(".jpg")) {
             bitmap = EncodeUtil.readRGBImage(file.getAbsolutePath());
+        } else if(file.getName().contains("ir")){
+            bitmap = EncodeUtil.readIRImage(file.getPath(),640,480);
         } else if (!file.getName().contains(".DS_Store")) {
             bitmap = EncodeUtil.readYUVImage(file.getPath(), 640, 480);
             bitmap = EncodeUtil.adjustPhotoRotation(bitmap, angle);

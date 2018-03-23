@@ -30,4 +30,5 @@ public class ExampleInstrumentedTest {
 
         assertEquals("com.face.tagging.tagging", appContext.getPackageName());
     }
+
 }

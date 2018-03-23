@@ -380,7 +380,6 @@ public class BaseImageAdapter extends RecyclerView.Adapter<BaseImageAdapter.Hold
         File originFile;
         String tag;
         String baseDir;
-        String tagFile;
     }
 
     public interface SelectBaseCallback{
