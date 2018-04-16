@@ -37,7 +37,10 @@ import util.observe.MsgMgr;
  */
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> implements com.face.tagging.moudle.TagAdapter.OnTagClickListener {
-
+    int width = 640;
+    int height = 480;
+    int irLenght = width*height*2;
+    int depthLenght = width*height*2;
     private List<TagData> dataList = new CopyOnWriteArrayList<>();
 
     ConcurrentHashMap<Integer, Future> map = new ConcurrentHashMap<>();
@@ -314,10 +317,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.Holder> impl
             bitmap = null;
         } else if (file.getName().contains(".png") || file.getName().contains(".jpg")) {
             bitmap = EncodeUtil.readRGBImage(file.getAbsolutePath());
-        } else if(file.getName().contains("ir")){
-            bitmap = EncodeUtil.readIRImage(file.getPath(),640,480);
+        } else if(file.length() == irLenght+depthLenght){
+            bitmap = EncodeUtil.readIRImage(file.getPath(),width,height);
+            bitmap = EncodeUtil.adjustPhotoRotation(bitmap, angle);
         } else if (!file.getName().contains(".DS_Store")) {
-            bitmap = EncodeUtil.readYUVImage(file.getPath(), 640, 480);
+            bitmap = EncodeUtil.readYUVImage(file.getPath(), width, height);
             bitmap = EncodeUtil.adjustPhotoRotation(bitmap, angle);
         } else {
             bitmap = null;

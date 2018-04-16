@@ -188,45 +188,63 @@ public class EncodeUtil {
     }
 
     public static Bitmap readIRImage(String filePath,int width,int height){
-        return getIRImage(readFile(filePath),width,height);
+        byte[] data = readFile(filePath);
+        if(data.length!=width*height*4)return null;
+        byte[] irdata = new byte[width*height*2];
+        System.arraycopy(data,0,irdata,0,irdata.length);
+        return getIROrDepthImage(irdata,width,height);
     }
 
-    public static Bitmap getIRImage(byte[] irData,int width,int height){
-        if(irData.length<width*height*2)return null;
-        int length = width*height;
+    public static Bitmap readDepthImage(String filePath,int width,int height){
+        byte[] data = readFile(filePath);
+        if(data.length!=width*height*4)return null;
+        byte[] depthData = new byte[width*height*2];
+        System.arraycopy(data,depthData.length,depthData,0,depthData.length);
+        return getIROrDepthImage(depthData,width,height);
+    }
+
+    public static Bitmap getIROrDepthImage(byte[] irData,int width,int height){
+
+        double divisor = 4095.0;// 1023.0;
+        double[] x_value = new double[irData.length / 2];
         short[] source = new short[width * height];
-//        int[] y = new int[width*height];
-        byte[] yuv = new byte[width*height*3/2];
         ByteBuffer.wrap(irData).order(ByteOrder.nativeOrder()).asShortBuffer().get(source);
-        for(int x = 0;x<length;x++){
-            yuv[x] = irData[2*x];
+
+        for (int i = 0; i < irData.length / 2; i++)
+        {
+            double temp = source[i] / divisor;
+            x_value[i] = temp;
+        }
+        double sum = 0.0;
+        for (double item : x_value)
+        {
+            sum += item;
+        }
+        double mean = sum / x_value.length;
+
+        double accum = 0.0;
+        for (double item : x_value)
+        {
+            accum += (item - mean) * (item - mean);
+        }
+        double stdev = Math.sqrt(accum / (x_value.length - 1));
+
+        double e_value = Math.max(0.000001, stdev);
+
+        byte[] yuv = new byte[height*width*3/2];
+        for (int i = 0; i < x_value.length; ++i)
+        {
+            double x = x_value[i];
+            double dd = x < 0 ? 0 : (x > 1 ? 1 : x);
+            double r = 0.6 * dd + 0.4 * ((x - mean) / e_value + 2) / 4;
+            r = r < 0 ? 0 : (r > 1 ? 1 : r);
+            yuv[i] = (byte)(r * 255);
         }
 
-        for(int x = length;x<yuv.length;x++){
-            yuv[x] = (byte)128;
+        for(int i = x_value.length;i<yuv.length;i++){
+            yuv[i] = (byte)128;
         }
-//
-//        int[] rgba = new int[length];
-//        for (int w = 0; w < width; w++)
-//            for (int h = 0; h < height; h++) {
-//                int y = (0xff & ((int) yuv[i * width + j]));
-//                y = y < 16 ? 16 : y;
-//                int r = Math.round(1.164f * (y - 16));
-//                int g = Math.round(1.164f * (y - 16));
-//                int b = Math.round(1.164f * (y - 16));
-//
-//                r = r < 0 ? 0 : (r > 255 ? 255 : r);
-//                g = g < 0 ? 0 : (g > 255 ? 255 : g);
-//                b = b < 0 ? 0 : (b > 255 ? 255 : b);
-//
-//                rgba[i * width + j] = 0xff000000 + (b << 16) + (g << 8) + r;
-//            }
-//
-//        Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//        bmp.setPixels(rgba, 0, width, 0, 0, width, height);
-//        return bmp;
-
-        return readYUVImage(yuv,height,width);
+        return readYUVImage(yuv,width,height);
     }
 
     public static byte[] rotateYUV240SP(byte[] src,int width,int height)
